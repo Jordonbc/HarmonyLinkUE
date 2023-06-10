@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HarmonyLinkUEBPLibrary.h"
+#include "HarmonyLinkClient.h"
 #include "DataRefreshActor.generated.h"
 
 UCLASS()

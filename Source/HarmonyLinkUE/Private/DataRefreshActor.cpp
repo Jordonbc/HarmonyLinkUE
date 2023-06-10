@@ -1,7 +1,7 @@
 ﻿// DataRefreshActor.cpp
 
 #include "DataRefreshActor.h"
-#include "HarmonyLinkUEBPLibrary.h"
+#include "HarmonyLinkClient.h"
 
 // Sets default values
 ADataRefreshActor::ADataRefreshActor()
@@ -50,8 +50,8 @@ void ADataRefreshActor::OnServerStatusChecked(bool connected)
 	if (connected)
 	{
 		// Refresh the data and update the cached information
-		UHarmonyLinkUEBPLibrary::RefreshAllInfo(FDeviceInfoCallback());
-		UHarmonyLinkUEBPLibrary::RefreshVersionInfo(FVersionInfoCallback());
+		UHarmonyLinkClient::RefreshAllInfo(FDeviceInfoCallback());
+		UHarmonyLinkClient::RefreshVersionInfo(FVersionInfoCallback());
 	}
 }
 
@@ -59,10 +59,10 @@ void ADataRefreshActor::OnServerStatusChecked(bool connected)
 void ADataRefreshActor::RefreshData()
 {
 	// Only refresh data if the Harmony Link library is available
-	if (UHarmonyLinkUEBPLibrary::StaticClass())
+	if (UHarmonyLinkClient::StaticClass())
 	{
 		// Check server status asynchronously
-		UHarmonyLinkUEBPLibrary::CheckServerStatus(ServerStatusCallback);
+		UHarmonyLinkClient::CheckServerStatus(ServerStatusCallback);
 	}
 }
 
