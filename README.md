@@ -27,6 +27,8 @@ This repository contains the Unreal Engine client plugin for the HarmonyLink API
 
 If you have not yet made the jump to Unreal Engine 5 you will need to edit the `HarmonyLinkUE.uplugin` and change the engine version to the desired engine.
 
+⚠️ HarmonyLinkUE will only work if you run [HarmonyLinkServer](https://github.com/Jordonbc/HarmonyLinkServer)
+
 ## Contributing
 
 We appreciate your contributions! Please fork this repository and make your changes in a separate branch. Then submit a pull request.
