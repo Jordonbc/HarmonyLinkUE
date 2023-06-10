@@ -22,7 +22,10 @@ This repository contains the Unreal Engine client plugin for the HarmonyLink API
 ## Usage
 
 1. Use the HarmonyLink API functions provided by this plugin in your game's code to access device metrics and docking status.
-2. Adjust your game's settings based on these metrics to optimize the gaming experience on handheld devices.
+2. Add the included `DataRefreshActor` to your levels for automatic api updates or request data manually from the functions (does not update on tick)
+3. Adjust your game's settings based on these metrics to optimize the gaming experience on handheld devices.
+
+If you have not yet made the jump to Unreal Engine 5 you will need to edit the `HarmonyLinkUE.uplugin` and change the engine version to the desired engine.
 
 ## Contributing
 
