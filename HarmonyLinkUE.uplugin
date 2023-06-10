@@ -20,7 +20,7 @@
 			"Name": "HarmonyLinkUE",
 			"Type": "Runtime",
 			"LoadingPhase": "PreLoadingScreen",
-			"WhitelistPlatforms": ["Win64", "Win32", "Linux"]
+			"WhitelistPlatforms": ["Win64", "Linux"]
 		}
 	]
 }
