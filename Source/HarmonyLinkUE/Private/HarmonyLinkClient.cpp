@@ -1,74 +1,74 @@
 // .cpp file
 
-#include "HarmonyLinkUEBPLibrary.h"
+#include "HarmonyLinkClient.h"
 #include "Interfaces/IHttpResponse.h"
 
-FAllInfo UHarmonyLinkUEBPLibrary::CachedAllInfo;
-FHarmonyLinkVersionData UHarmonyLinkUEBPLibrary::CachedVersionData;
-bool UHarmonyLinkUEBPLibrary::Connected;
+FAllInfo UHarmonyLinkClient::CachedAllInfo;
+FHarmonyLinkVersionData UHarmonyLinkClient::CachedVersionData;
+bool UHarmonyLinkClient::Connected;
 
-UHarmonyLinkUEBPLibrary::UHarmonyLinkUEBPLibrary(const FObjectInitializer& ObjectInitializer)
+UHarmonyLinkClient::UHarmonyLinkClient(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 
 }
 
-void UHarmonyLinkUEBPLibrary::CheckServerStatus(FServerStatusCallback Callback)
+void UHarmonyLinkClient::CheckServerStatus(FServerStatusCallback Callback)
 {
 	TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetURL(TEXT("http://localhost:9000/are_you_there"));
 	Request->SetVerb(TEXT("GET"));
 
-	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkUEBPLibrary::OnCheckServerStatusResponseReceived, Callback);
+	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkClient::OnCheckServerStatusResponseReceived, Callback);
 
 	Request->ProcessRequest();
 }
 
-void UHarmonyLinkUEBPLibrary::RefreshOSInfo(FOSInfoCallback Callback)
+void UHarmonyLinkClient::RefreshOSInfo(FOSInfoCallback Callback)
 {
 	TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetURL(TEXT("http://localhost:9000/os_info"));
 	Request->SetVerb(TEXT("GET"));
 
-	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkUEBPLibrary::OnOSInfoResponseReceived, Callback);
+	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkClient::OnOSInfoResponseReceived, Callback);
 
 	Request->ProcessRequest();
 }
 
-void UHarmonyLinkUEBPLibrary::RefreshBatteryInfo(FBatteryInfoCallback Callback)
+void UHarmonyLinkClient::RefreshBatteryInfo(FBatteryInfoCallback Callback)
 {
 	TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetURL(TEXT("http://localhost:9000/battery_info"));
 	Request->SetVerb(TEXT("GET"));
 
-	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkUEBPLibrary::OnBatteryInfoResponseReceived, Callback);
+	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkClient::OnBatteryInfoResponseReceived, Callback);
 
 	Request->ProcessRequest();
 }
 
-void UHarmonyLinkUEBPLibrary::RefreshAllInfo(FDeviceInfoCallback Callback)
+void UHarmonyLinkClient::RefreshAllInfo(FDeviceInfoCallback Callback)
 {
 	TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetURL(TEXT("http://localhost:9000/all_info"));
 	Request->SetVerb(TEXT("GET"));
 
-	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkUEBPLibrary::OnDeviceInfoResponseReceived, Callback);
+	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkClient::OnDeviceInfoResponseReceived, Callback);
 
 	Request->ProcessRequest();
 }
 
-void UHarmonyLinkUEBPLibrary::RefreshVersionInfo(FVersionInfoCallback Callback)
+void UHarmonyLinkClient::RefreshVersionInfo(FVersionInfoCallback Callback)
 {
 	TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetURL(TEXT("http://localhost:9000/version_info"));
 	Request->SetVerb(TEXT("GET"));
 
-	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkUEBPLibrary::OnVersionInfoResponseReceived, Callback);
+	Request->OnProcessRequestComplete().BindLambda(&UHarmonyLinkClient::OnVersionInfoResponseReceived, Callback);
 
 	Request->ProcessRequest();
 }
 
-void UHarmonyLinkUEBPLibrary::OnCheckServerStatusResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FServerStatusCallback Callback)
+void UHarmonyLinkClient::OnCheckServerStatusResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FServerStatusCallback Callback)
 {
 	if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Ok)
 	{
@@ -88,7 +88,7 @@ void UHarmonyLinkUEBPLibrary::OnCheckServerStatusResponseReceived(FHttpRequestPt
 	}
 }
 
-void UHarmonyLinkUEBPLibrary::OnOSInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FOSInfoCallback Callback)
+void UHarmonyLinkClient::OnOSInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FOSInfoCallback Callback)
 {
 	if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Ok)
 	{
@@ -122,7 +122,7 @@ void UHarmonyLinkUEBPLibrary::OnOSInfoResponseReceived(FHttpRequestPtr Request, 
 	}
 }
 
-void UHarmonyLinkUEBPLibrary::OnBatteryInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FBatteryInfoCallback Callback)
+void UHarmonyLinkClient::OnBatteryInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FBatteryInfoCallback Callback)
 {
 	if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Ok)
 	{
@@ -164,7 +164,7 @@ void UHarmonyLinkUEBPLibrary::OnBatteryInfoResponseReceived(FHttpRequestPtr Requ
 	}
 }
 
-void UHarmonyLinkUEBPLibrary::OnDeviceInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FDeviceInfoCallback Callback)
+void UHarmonyLinkClient::OnDeviceInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FDeviceInfoCallback Callback)
 {
 	if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Ok)
 	{
@@ -253,7 +253,7 @@ void UHarmonyLinkUEBPLibrary::OnDeviceInfoResponseReceived(FHttpRequestPtr Reque
 }
 
 
-void UHarmonyLinkUEBPLibrary::OnVersionInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FVersionInfoCallback Callback)
+void UHarmonyLinkClient::OnVersionInfoResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FVersionInfoCallback Callback)
 {
 	if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Ok)
 	{

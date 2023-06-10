@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Jordon Brooks © 2023
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include "Engine/World.h"
 #include "Engine/WorldComposition.h"
 
-#include "HarmonyLinkUEBPLibrary.generated.h"
+#include "HarmonyLinkClient.generated.h"
 
 UENUM(BlueprintType)
 enum class EDockModel : uint8
@@ -219,7 +219,7 @@ DECLARE_DYNAMIC_DELEGATE_OneParam(FServerStatusCallback, const bool, connected);
 *	https://wiki.unrealengine.com/Custom_Blueprint_Node_Creation
 */
 UCLASS()
-class HARMONYLINKUE_API UHarmonyLinkUEBPLibrary : public UBlueprintFunctionLibrary
+class HARMONYLINKUE_API UHarmonyLinkClient : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
 

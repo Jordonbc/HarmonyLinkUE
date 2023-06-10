@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Jordon Brooks © 2023
 
 #pragma once
 
