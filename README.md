@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="Resources/HarmonyLinkLogo.png" alt="HarmonyLinkLogo"/>
+</p>
+
 # HarmonyLink Unreal Engine Client Plugin
 
 This repository contains the Unreal Engine client plugin for the HarmonyLink API, providing real-time device metrics for handheld devices to enhance gameplay and immersion.
@@ -7,6 +11,19 @@ This repository contains the Unreal Engine client plugin for the HarmonyLink API
 - **Device Identification**: The plugin allows Unreal Engine games to identify the specific handheld device they're operating on.
 - **Real-Time Metrics**: Unreal Engine games can access real-time data about the handheld device's power usage and docking status via this plugin.
 - **Adaptive Game Settings**: Use the power metrics and docking status to adapt the game’s quality settings for a more customized gaming experience.
+
+## Media
+
+Below is a video demonstrating how HarmonyLink Plugin can enhance the gaming experience. The footage showcases a Minecraft mod utilizing the underlying HarmonyLink program. This illustrates the real-world application of our plugin and how it can bring significant changes to the gameplay, making it more immersive and responsive to device metrics.
+
+<p align="center">
+    <a href="https://www.youtube.com/watch?v=Uttf-lcE-Jk"><img src="https://img.youtube.com/vi/Uttf-lcE-Jk/0.jpg" alt="HarmonyLinkLogo"/></a>
+</p>
+<p align="center">
+  <img src="Resources/Blueprints.png" alt="HarmonyLinkLogo"/>
+</p>
+
+The image above showcases the blueprint nodes from Unreal Engine that are part of the HarmonyLink Plugin. These nodes are the building blocks of the plugin, acting as an interface between the Unreal Engine game and the handheld device's metrics. These blueprints are pivotal in tailoring the game's settings based on real-time device metrics, ensuring an optimized gaming experience.
 
 ## Requirements
 
