@@ -24,10 +24,10 @@ struct FSDock
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	EDockModel Model = EDockModel::Unknown;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString Name = "";
 
 	void Print() const
@@ -43,13 +43,13 @@ struct FDockInfo
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FSDock DockModel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	bool bIsDocked = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	bool bFallbackDetection = false;
 
 	void Print() const
@@ -67,16 +67,16 @@ struct FOSInfo
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString OSType = "Unknown";
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString OSVersion = "";
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString OSEdition = "";
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString OSBits = "X64";
 
 	void Print() const
@@ -102,13 +102,13 @@ struct FBatteryInfo
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	bool bHasBattery = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	int32 BatteryPercent = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	EChargingStatus ChargingStatus = EChargingStatus::Unknown;
 
 	void Print() const
@@ -125,34 +125,34 @@ struct FHarmonyLinkVersionData
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString BuildTimestamp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString GitBranch;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString GitDescribe;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString GitCommitTimestamp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	bool bDebug;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString Version;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	int32 VersionMajor;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	int32 VersionMinor;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	int32 VersionPatch;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FString VersionPre;
 
 	void Print() const
@@ -176,13 +176,13 @@ struct FAllInfo
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FOSInfo OSInfo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FDockInfo DockInfo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HarmonyLink")
 	FBatteryInfo BatteryInfo;
 
 	void Print() const
