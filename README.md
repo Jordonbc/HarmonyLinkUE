@@ -2,62 +2,61 @@
   <img src="Resources/HarmonyLinkLogo.png" alt="HarmonyLinkLogo"/>
 </p>
 
-# HarmonyLink Unreal Engine Client Plugin
+# HarmonyLink Unreal Engine 5 Plugin
 
-This repository contains the Unreal Engine client plugin for the HarmonyLink API, providing real-time device metrics for handheld devices to enhance gameplay and immersion.
+This repository hosts the Unreal Engine 5 plugin for HarmonyLink, designed to provide real-time device metrics for handheld gaming, enhancing both gameplay and immersion.
 
 ## Features
 
-- **Device Identification**: The plugin allows Unreal Engine games to identify the specific handheld device they're operating on.
-- **Real-Time Metrics**: Unreal Engine games can access real-time data about the handheld device's power usage and docking status via this plugin.
-- **Adaptive Game Settings**: Use the power metrics and docking status to adapt the game’s quality settings for a more customized gaming experience.
+- **Intelligent Hardware Recognition**: HarmonyLink 2.0 can accurately identify specific devices like the Steam Deck without relying on manual environment variables or command line arguments.
+  
+- **Robust API**: The API provided by HarmonyLink 2.0 offers developers straightforward and effortless access to detailed system information. Designed with intuitiveness in mind, it allows for rapid integration into projects, minimizing development overhead.
+
+- **Enhanced Adaptability**: With the ability to dynamically adjust game settings and performance based on detected hardware capabilities and current operating conditions, HarmonyLink 2.0 ensures games are optimized for each specific device.
+
+- **Wine Environment Detection**: HarmonyLink 2.0 includes mechanisms to detect when it is running within a Wine environment, enabling it to deliver system information about the underlying Linux system while operating through Wine.
+
+- **Precise Steam Deck Hardware Detection**: Unlike conventional methods that may rely on environment variables, HarmonyLink 2.0 detects the presence of Steam Deck hardware directly, ensuring reliable identification and optimization for this specific device.
+
+- **Battery and Charging Status Awareness**: The software provides real-time data on battery levels and charging status, allowing games to adapt their behavior based on power availability and to manage resource usage effectively.
+
+- **Cross-Platform Functionality**: HarmonyLink 2.0 is designed to work on Windows (including Wine environments) as well as natively on Linux, offering broad support for a variety of gaming setups.
 
 ## Media
 
-Below is a video demonstrating how HarmonyLink Plugin can enhance the gaming experience. The footage showcases a Minecraft mod utilizing the underlying HarmonyLink program. This illustrates the real-world application of our plugin and how it can bring significant changes to the gameplay, making it more immersive and responsive to device metrics.
+Watch the HarmonyLink Plugin in action, demonstrating its impact on gameplay through a Minecraft mod example:
 
 <p align="center">
-    <a href="https://www.youtube.com/watch?v=Uttf-lcE-Jk"><img src="https://img.youtube.com/vi/Uttf-lcE-Jk/0.jpg" alt="HarmonyLinkLogo"/></a>
+    <a href="https://www.youtube.com/watch?v=Uttf-lcE-Jk"><img src="https://img.youtube.com/vi/Uttf-lcE-Jk/0.jpg" alt="HarmonyLink Demo"/></a>
 </p>
 <p align="center">
-  <img src="Resources/Blueprints.png" alt="HarmonyLinkLogo"/>
+  <img src="Resources/Blueprints.png" alt="Blueprint Nodes"/>
 </p>
 
-The image above showcases the blueprint nodes from Unreal Engine that are part of the HarmonyLink Plugin. These nodes are the building blocks of the plugin, acting as an interface between the Unreal Engine game and the handheld device's metrics. These blueprints are pivotal in tailoring the game's settings based on real-time device metrics, ensuring an optimized gaming experience.
+The above image showcases the Unreal Engine 5 blueprint nodes provided by the HarmonyLink Plugin, which facilitate real-time communication between the game and device metrics.
 
 ## Requirements
 
-- Unreal Engine 4.x/5.x
-- HarmonyLink Server (native Linux or Windows)
+- Unreal Engine 5.x (backwards compatible with 4.x)
 
 ## Getting Started
 
-1. Clone this repository to your local machine.
-2. Copy the `HarmonyLinkPlugin` folder into your Unreal Engine project's `Plugins` folder.
-3. Open your Unreal Engine project. The plugin should be automatically detected. If not, enable it manually in the Plugins window.
-
-## Usage
-
-1. Use the HarmonyLink API functions provided by this plugin in your game's code to access device metrics and docking status.
-2. Add the included `DataRefreshActor` to your levels for automatic api updates or request data manually from the functions (does not update on tick)
-3. Adjust your game's settings based on these metrics to optimize the gaming experience on handheld devices.
-
-If you have not yet made the jump to Unreal Engine 5 you will need to edit the `HarmonyLinkUE.uplugin` and change the engine version to the desired engine.
-
-⚠️ HarmonyLinkUE will only work if you run [HarmonyLinkServer](https://github.com/Jordonbc/HarmonyLinkServer)
+1. Clone this repository.
+2. Place the `HarmonyLinkPlugin` folder into your Unreal Engine project's `Plugins` directory.
+3. Open your project; the plugin should be detected automatically or enabled manually in the Plugins window.
 
 ## Contributing
 
-We appreciate your contributions! Please fork this repository and make your changes in a separate branch. Then submit a pull request.
+Your contributions are welcome! Please fork, make changes in a separate branch, and submit a pull request.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+Licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-For more information, feel free to reach out or open an issue.
+For inquiries or issues, reach out or open an issue on GitHub.
 
 ## Acknowledgements
 
-- The HarmonyLink Server application can be found [here](https://github.com/Jordonbc/HarmonyLinkServer).
+- Full HarmonyLinkLib source code is available [here](https://github.com/Jordonbc/HarmonyLink).
