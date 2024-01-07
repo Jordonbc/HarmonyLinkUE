@@ -1,10 +1,10 @@
-// Copyright Jordon Brooks © 2023
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "Modules/ModuleManager.h"
 
-class FHarmonyLinkUEModule : public IModuleInterface
+class FHarmonyLinkModule : public IModuleInterface
 {
 public:
 

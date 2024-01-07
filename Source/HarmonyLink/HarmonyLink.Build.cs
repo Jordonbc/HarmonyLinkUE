@@ -1,10 +1,11 @@
-// Some copyright should be here...
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
-public class HarmonyLinkUE : ModuleRules
+public class HarmonyLink : ModuleRules
 {
-	public HarmonyLinkUE(ReadOnlyTargetRules Target) : base(Target)
+	public HarmonyLink(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -18,6 +19,7 @@ public class HarmonyLinkUE : ModuleRules
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
+				"ThirdParty/HarmonyLinkLib/include"
 			}
 			);
 			
@@ -26,9 +28,9 @@ public class HarmonyLinkUE : ModuleRules
 			new string[]
 			{
 				"Core",
-				"HTTP",
-				"Json",
-				"JsonUtilities"
+				"CoreUObject",
+                "Engine",
+				"Projects"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -37,10 +39,6 @@ public class HarmonyLinkUE : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -52,5 +50,10 @@ public class HarmonyLinkUE : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+		
+		PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.lib"));
+
+
+		RuntimeDependencies.Add("$(BinaryOutputDir)/HarmonyLinkLib.dll", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.dll"));
 	}
 }
