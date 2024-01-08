@@ -1,15 +1,12 @@
-﻿// Copyright (C) 2023  Jordon Brooks
+﻿// Copyright (C) 2024 Jordon Brooks
 #pragma once
 
-#include <HarmonyLinkLib.h>
-
 #include "CoreMinimal.h"
+#include <HarmonyLinkLib.h>
 
 #include "OSVerInfo.generated.h"
 
-/**
- *
- */
+// Represents information about an operating system version.
 USTRUCT(BlueprintType)
 struct FOSVerInfo
 {
@@ -17,26 +14,35 @@ struct FOSVerInfo
 
 	FOSVerInfo() {}
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// The name of the operating system.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	FString Name;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// Numerical version of the operating system.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	int32 Version = 0;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// Unique identifier for the operating system.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	FString ID;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// Identifier for the specific version of the operating system.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	FString VersionID;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// Codename for the operating system version.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	FString VersionCodename;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// User-friendly name for the operating system version.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	FString PrettyName;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// Variant identifier of the operating system.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	FString VariantID;
 
+	// Constructor that initializes the struct with information from an external source.
+	// @param oldInfo Pointer to an external FOSVerInfo structure to copy data from.
 	FOSVerInfo(HarmonyLinkLib::FOSVerInfo* oldInfo);
 };

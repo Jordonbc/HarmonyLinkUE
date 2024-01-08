@@ -1,4 +1,6 @@
-﻿#include "Structs/Device.h"
+﻿// Copyright (C) 2024 Jordon Brooks
+
+#include "Structs/Device.h"
 
 #include <Structs/FDevice.h>
 

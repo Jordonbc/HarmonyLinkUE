@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2023  Jordon Brooks
+﻿// Copyright (C) 2024 Jordon Brooks
 
 #include "Structs/Battery.h"
 

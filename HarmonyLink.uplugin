@@ -3,22 +3,23 @@
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "HarmonyLink",
-	"Description": "",
-	"Category": "Other",
+	"Description": "Revolutionize handheld gaming with adaptive game settings. Optimize graphics and gameplay experience based on real-time system metrics. Open-source project empowering developers to enhance games on portable devices",
+	"Category": "Handheld",
 	"CreatedBy": "Jordon Brooks",
 	"CreatedByURL": "https://jordongamedev.co.uk",
-	"DocsURL": "",
-	"MarketplaceURL": "",
+	"DocsURL": "https://github.com/Jordonbc/HarmonyLink",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/92fd511971274d1f955abb7197485041",
 	"SupportURL": "",
 	"CanContainContent": true,
-	"IsBetaVersion": true,
-	"IsExperimentalVersion": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
 			"Name": "HarmonyLink",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": ["Win64", "Linux"]
 		}
 	]
 }

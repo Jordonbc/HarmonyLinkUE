@@ -30,7 +30,6 @@ public class HarmonyLink : ModuleRules
 				"Core",
 				"CoreUObject",
                 "Engine",
-				"Projects"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -51,9 +50,23 @@ public class HarmonyLink : ModuleRules
 			}
 			);
 		
-		PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.lib"));
-
-
-		RuntimeDependencies.Add("$(BinaryOutputDir)/HarmonyLinkLib.dll", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.dll"));
+		// Platform-specific settings
+		if (Target.Platform == UnrealTargetPlatform.Win64)
+		{
+			PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.lib"));
+			RuntimeDependencies.Add("$(BinaryOutputDir)/HarmonyLinkLib.dll", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.dll"));
+		}
+		else if (Target.Platform == UnrealTargetPlatform.Linux)
+		{
+			PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Linux/libHarmonyLinkLib.so"));
+			RuntimeDependencies.Add("$(BinaryOutputDir)/libHarmonyLinkLib.so", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Linux/libHarmonyLinkLib.so"));
+		}
+		
+		// I shall include this if anyone wishes to provide Mac binaries of HarmonyLink but these are not included by default as I don't own one.
+		else if (Target.Platform == UnrealTargetPlatform.Mac)
+		{
+			PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Mac/HarmonyLinkLib.dylib"));
+			RuntimeDependencies.Add("$(BinaryOutputDir)/HarmonyLinkLib.dylib", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Mac/HarmonyLinkLib.dylib"));
+		}
 	}
 }

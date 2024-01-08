@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2023  Jordon Brooks
+﻿// Copyright (C) 2024 Jordon Brooks
 #pragma once
 
 #include <HarmonyLinkLib.h>
@@ -6,8 +6,8 @@
 #include "CoreMinimal.h"
 #include "Battery.generated.h"
 
-/**
- *
+/*
+ * Represents the battery status and information of a device.
  */
 USTRUCT(BlueprintType)
 struct FBattery
@@ -16,14 +16,19 @@ struct FBattery
 
 	FBattery() {}
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// Indicates whether the device has a battery.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	bool HasBattery = false;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// Indicates whether the device is connected to AC power.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	bool IsACConnected = false;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// The current battery percentage of the device.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	int32 BatteryPercent = 0;
 
+	// Constructor that initializes the struct with information from an external battery source.
+	// @param battery Pointer to an external FBattery structure to copy data from.
 	FBattery(HarmonyLinkLib::FBattery* battery);
 };

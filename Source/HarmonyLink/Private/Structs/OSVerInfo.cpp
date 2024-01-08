@@ -1,4 +1,6 @@
-﻿#include "Structs/OSVerInfo.h"
+﻿// Copyright (C) 2024 Jordon Brooks
+
+#include "Structs/OSVerInfo.h"
 
 FOSVerInfo::FOSVerInfo(HarmonyLinkLib::FOSVerInfo* oldInfo)
 {
