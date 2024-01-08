@@ -1,13 +1,13 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Device.generated.h"
+#include "DeviceEnum.generated.h"
 
 /**
  *
  */
 UENUM(BlueprintType)
-enum class EDevice : uint8
+enum class EDeviceEnum : uint8
 {
     DESKTOP UMETA(DisplayName = "Desktop"),
     LAPTOP UMETA(DisplayName = "Laptop"),

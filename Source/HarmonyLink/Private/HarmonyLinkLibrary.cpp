@@ -7,44 +7,38 @@
 
 bool UHarmonyLinkLibrary::IsWine()
 {
-	static bool IsWine_ = HarmonyLinkLib::get_is_wine();
-	return IsWine_;
+	return HarmonyLinkLib::get_is_wine();
 }
 
 bool UHarmonyLinkLibrary::IsLinux()
 {
-	static bool IsLinux_ =
 #if PLATFORM_WINDOWS
-		IsWine();
+	return IsWine();
 #elif PLATFORM_LINUX
-		true;
+	return true;
 #else
-	false;
+	return false;
 #endif
-	
-	return IsLinux_;
 }
 
 bool UHarmonyLinkLibrary::IsSteamDeck()
 {
-	static bool IsSteamDeck_ = GetDeviceInfo().Device == EDevice::STEAM_DECK;
-	return IsSteamDeck_;
+	return GetDeviceInfo().Device == EDeviceEnum::STEAM_DECK;
 }
 
 FCPUInfo UHarmonyLinkLibrary::GetCPUInfo()
 {
-	static FCPUInfo CPUInfo(HarmonyLinkLib::get_cpu_info());
-	return CPUInfo;
+	return FCPUInfo(HarmonyLinkLib::get_cpu_info());
 }
 
 FDevice UHarmonyLinkLibrary::GetDeviceInfo()
 {
-	return FDevice();
+	return FDevice(HarmonyLinkLib::get_device_info());
 }
 
 FOSVerInfo UHarmonyLinkLibrary::GetOSInfo()
 {
-	return FOSVerInfo();
+	return FOSVerInfo(HarmonyLinkLib::get_os_version());
 }
 
 FBattery UHarmonyLinkLibrary::GetBatteryStatus()

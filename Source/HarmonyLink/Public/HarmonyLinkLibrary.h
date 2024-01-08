@@ -6,7 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Structs/Battery.h"
 #include "Structs/CPUInfo.h"
-#include "Structs/FDevice.h"
+#include "Structs/Device.h"
 #include "Structs/OSVerInfo.h"
 #include "HarmonyLinkLibrary.generated.h"
 

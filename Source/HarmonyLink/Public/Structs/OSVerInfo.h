@@ -1,6 +1,8 @@
 ﻿// Copyright (C) 2023  Jordon Brooks
 #pragma once
 
+#include <HarmonyLinkLib.h>
+
 #include "CoreMinimal.h"
 
 #include "OSVerInfo.generated.h"
@@ -12,6 +14,8 @@ USTRUCT(BlueprintType)
 struct FOSVerInfo
 {
 	GENERATED_BODY()
+
+	FOSVerInfo() {}
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FString Name;
@@ -33,4 +37,6 @@ struct FOSVerInfo
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FString VariantID;
+
+	FOSVerInfo(HarmonyLinkLib::FOSVerInfo* oldInfo);
 };
