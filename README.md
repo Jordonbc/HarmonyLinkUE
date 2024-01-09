@@ -27,7 +27,11 @@ This repository hosts the Unreal Engine 5 plugin for HarmonyLink, designed to pr
 Watch the HarmonyLink Plugin in action, demonstrating its impact on gameplay through a Minecraft mod example:
 
 <p align="center">
-    <a href="https://www.youtube.com/watch?v=Uttf-lcE-Jk"><img src="https://img.youtube.com/vi/Uttf-lcE-Jk/0.jpg" alt="HarmonyLink Demo"/></a>
+    <a href="https://www.youtube.com/watch?v=lc7a6hpp7g8"><img src="https://img.youtube.com/vi/lc7a6hpp7g8/0.jpg" alt="HarmonyLink 2.0 Demo"/></a>
+</p>
+
+<p align="center">
+    <a href="https://www.youtube.com/watch?v=bxFBTU4nLUo"><img src="https://img.youtube.com/vi/bxFBTU4nLUo/0.jpg" alt="HarmonyLink 2.0 Demo"/></a>
 </p>
 <p align="center">
   <img src="Resources/Blueprints.png" alt="Blueprint Nodes"/>
