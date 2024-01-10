@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright (C) 2024 Jordon Brooks
 
 #include "HarmonyLink.h"
 #include "Modules/ModuleManager.h"
