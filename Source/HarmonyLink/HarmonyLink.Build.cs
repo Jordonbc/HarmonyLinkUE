@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright (C) 2024 Jordon Brooks
 
 using UnrealBuildTool;
 using System.IO;
