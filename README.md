@@ -6,6 +6,11 @@
 
 This repository hosts the Unreal Engine 5 plugin for HarmonyLink, designed to provide real-time device metrics for handheld gaming, enhancing both gameplay and immersion.
 
+
+<p align="center">
+  <a align="center" href="https://www.unrealengine.com/marketplace/en-US/product/harmonylink">Download the Marketplace plugin here</a>
+</p>
+
 ## Features
 
 - **Intelligent Hardware Recognition**: HarmonyLink 2.0 can accurately identify specific devices like the Steam Deck without relying on manual environment variables or command line arguments.
