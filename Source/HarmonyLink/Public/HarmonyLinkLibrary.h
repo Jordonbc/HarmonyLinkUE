@@ -20,6 +20,7 @@ class HARMONYLINK_API UHarmonyLinkLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
+public:
 	// Checks if the game is running under Wine.
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink")
 	static bool IsWine();
