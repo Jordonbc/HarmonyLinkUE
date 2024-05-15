@@ -38,17 +38,16 @@ public:
 private:
 	void CreateDefaultConfigFile();
 	bool LoadSettingsFromConfig();
-
 	bool LoadSection(const FConfigFile& ConfigFile, const TPair<EProfile, FName> Profile);
-
 	void SaveSection(FSettingsProfile& SettingsProfile, const bool bFlush = false) const;
-
 	void LoadDefaults();
-
-	void DebugPrintProfiles() const;
-	static void PrintDebugSection(FSettingsProfile& SettingsProfile);
+	void ApplyProfile(EProfile Profile);
 
 	static void ResetInstance();
+
+	// Debugging
+	void DebugPrintProfiles() const;
+	static void PrintDebugSection(FSettingsProfile& SettingsProfile);
 
 	static FString IniLocation;
 

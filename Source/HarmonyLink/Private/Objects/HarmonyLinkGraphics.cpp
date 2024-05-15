@@ -4,6 +4,7 @@
 #include "Objects/HarmonyLinkGraphics.h"
 #include "ComponentRecreateRenderStateContext.h"
 #include "HarmonyLink.h"
+#include "HarmonyLinkLibrary.h"
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::Instance = nullptr;
 FString UHarmonyLinkGraphics::IniLocation = "HarmonyLink";
@@ -156,11 +157,22 @@ void UHarmonyLinkGraphics::ApplySettings(const bool bCheckForCommandLineOverride
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 {
-	if (!Instance)
+	// Check if we already initialised
+	if (Instance)
 	{
-		Instance = NewObject<UHarmonyLinkGraphics>();
-		Instance->AddToRoot();
-		Instance->LoadConfig();
+		return Instance;
+	}
+
+	// Proceed to create a new singleton instance
+	Instance = NewObject<UHarmonyLinkGraphics>();
+	Instance->AddToRoot();
+	Instance->LoadConfig();
+
+	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
+
+	if (BatteryStatus.HasBattery)
+	{
+		Instance->ApplyProfile(EProfile::BATTERY);
 	}
 	
 	return Instance;
@@ -248,6 +260,11 @@ void UHarmonyLinkGraphics::LoadDefaults()
 
 		Profiles.Add(Profile.Key, NewProfileSettings);
 	}
+}
+
+void UHarmonyLinkGraphics::ApplyProfile(EProfile Profile)
+{
+	
 }
 
 void UHarmonyLinkGraphics::DebugPrintProfiles() const
