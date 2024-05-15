@@ -14,25 +14,29 @@ enum class EConfigValueType : uint8
 	String
 };
 
+/**
+ *	Note: In Blueprints, all values will be visible, but only the value corresponding to the 'Type' will be used.
+ */
 USTRUCT(BlueprintType)
 struct FHLConfigValue
 {
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere, Category="ConfigValue")
+	// Allow Blueprint access to these private variables
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConfigValue", meta = (AllowPrivateAccess = "true"))
 	EConfigValueType Type;
 
-	UPROPERTY(EditAnywhere, Category="ConfigValue")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConfigValue", meta = (AllowPrivateAccess = "true", EditCondition = "Type == EConfigValueType::Int", EditConditionHides))
 	int32 IntValue;
 
-	UPROPERTY(EditAnywhere, Category="ConfigValue")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConfigValue", meta = (AllowPrivateAccess = "true", EditCondition = "Type == EConfigValueType::Float", EditConditionHides))
 	float FloatValue;
 
-	UPROPERTY(EditAnywhere, Category="ConfigValue")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConfigValue", meta = (AllowPrivateAccess = "true", EditCondition = "Type == EConfigValueType::Bool", EditConditionHides))
 	bool BoolValue;
 
-	UPROPERTY(EditAnywhere, Category="ConfigValue")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConfigValue", meta = (AllowPrivateAccess = "true", EditCondition = "Type == EConfigValueType::String", EditConditionHides))
 	FString StringValue;
 
 public:

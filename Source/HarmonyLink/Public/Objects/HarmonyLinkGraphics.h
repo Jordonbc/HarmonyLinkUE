@@ -9,6 +9,8 @@
 #include "UObject/Object.h"
 #include "HarmonyLinkGraphics.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProfileChanged, EProfile, Profile);
+
 /**
  * 
  */
@@ -19,6 +21,10 @@ class HARMONYLINK_API UHarmonyLinkGraphics : public UObject
 
 public:
 	UHarmonyLinkGraphics();
+	virtual ~UHarmonyLinkGraphics() override;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnProfileChanged OnProfileChanged;
 	
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
 	void LoadConfig(const bool bForceReload = false);
@@ -26,19 +32,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
 	void SaveConfig() const;
 
+	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
+	void SetSetting(EProfile Profile, FName Setting, FHLConfigValue Value);
+
+	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
+	bool ApplyProfile(EProfile Profile);
+
 	/** Returns the game local machine settings (resolution, windowing mode, scalability settings, etc...) */
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
 	static UHarmonyLinkGraphics* GetSettings();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink Settings")
+	FSettingsProfile GetSettingProfile(const EProfile Profile);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink Settings")
+	EProfile GetActiveProfile() const;
+
+	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
+	void SetAutomaticSwitching(const bool bAutomaticSwitch);
+
 	static void DestroySettings();
 
 private:
+	void Init();
+	void Tick();
 	void CreateDefaultConfigFile();
 	bool LoadSettingsFromConfig();
 	bool LoadSection(const FConfigFile& ConfigFile, const TPair<EProfile, FName> Profile);
 	void SaveSection(FSettingsProfile& SettingsProfile, const bool bFlush = false) const;
 	void LoadDefaults();
-	bool ApplyProfile(EProfile Profile);
+
+	void OnPostWorldInitialization(UWorld* World, UWorld::InitializationValues IVS);
 
 	static void ResetInstance();
 
@@ -48,17 +72,26 @@ private:
 	void DebugPrintProfiles() const;
 	static void PrintDebugSection(FSettingsProfile& SettingsProfile);
 
-	static FString IniLocation;
+	static FString _IniLocation;
 
-	TMap<EProfile, FName> ProfileNames = {
+	uint8 _bAutomaticSwitch :1;
+
+	// How many times to query HarmonyLinkLib for hardware info
+	static int32 _TickRate;
+
+	FTimerHandle _TickTimerHandle;
+
+	EProfile _ActiveProfile = EProfile::NONE;
+
+	TMap<EProfile, FName> _ProfileNames = {
 		{EProfile::BATTERY, "Battery"},
 		{EProfile::CHARGING, "Charging"},
 		{EProfile::DOCKED, "Docked"},
 	};
 
-	TMap<EProfile, FSettingsProfile> Profiles;
+	TMap<EProfile, FSettingsProfile> _Profiles;
 
-	static TMap<FName, TMap<FName, FHLConfigValue>> DefaultSettings;
+	static TMap<FName, TMap<FName, FHLConfigValue>> _DefaultSettings;
 
-	static UHarmonyLinkGraphics* Instance;
+	static UHarmonyLinkGraphics* _INSTANCE;
 };

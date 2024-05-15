@@ -5,11 +5,13 @@
 #include "ComponentRecreateRenderStateContext.h"
 #include "HarmonyLink.h"
 #include "HarmonyLinkLibrary.h"
+#include "GameFramework/GameUserSettings.h"
 
-UHarmonyLinkGraphics* UHarmonyLinkGraphics::Instance = nullptr;
-FString UHarmonyLinkGraphics::IniLocation = "HarmonyLink";
+UHarmonyLinkGraphics* UHarmonyLinkGraphics::_INSTANCE = nullptr;
+FString UHarmonyLinkGraphics::_IniLocation = "HarmonyLink";
+int32 UHarmonyLinkGraphics::_TickRate = 1;
 
-TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::DefaultSettings = {
+TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::_DefaultSettings = {
 	{ "Battery", {
 		            { TEXT("r.ReflectionMethod"), FHLConfigValue(0) },
 					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
@@ -33,6 +35,14 @@ TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::DefaultSettings =
 UHarmonyLinkGraphics::UHarmonyLinkGraphics()
 {
 	UE_LOG(LogHarmonyLink, Warning, TEXT("HarmonyLinkGraphics initialized."));
+
+	_bAutomaticSwitch = true;
+	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UHarmonyLinkGraphics::OnPostWorldInitialization);
+}
+
+UHarmonyLinkGraphics::~UHarmonyLinkGraphics()
+{
+	FWorldDelegates::OnPostWorldInitialization.RemoveAll(this);
 }
 
 void UHarmonyLinkGraphics::LoadConfig(const bool bForceReload)
@@ -56,12 +66,18 @@ bool UHarmonyLinkGraphics::LoadSettingsFromConfig()
 
 	const FString Filename = GetDefaultConfigFilename();
 
-	if (FConfigCacheIni::LoadLocalIniFile(ConfigFile, *Filename, true, nullptr, false))
+	if (!GConfig)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to access GConfig!"))
+		return false;
+	}
+
+	if (GConfig->LoadLocalIniFile(ConfigFile, *Filename, false, nullptr, false))
 	{
 		// Load each profile section
 		bool bLoaded = true;
 
-		for (const TPair<EProfile, FName>& Profile : ProfileNames)
+		for (const TPair<EProfile, FName>& Profile : _ProfileNames)
 		{
 			if (!LoadSection(ConfigFile, Profile))
 			{
@@ -90,7 +106,7 @@ bool UHarmonyLinkGraphics::LoadSection(const FConfigFile& ConfigFile, const TPai
 
 	if (const FConfigSection* Section = ConfigFile.FindSection(*SectionName.ToString()))
 	{
-		FSettingsProfile& SettingsProfile = Profiles.FindOrAdd(ProfileKey);
+		FSettingsProfile& SettingsProfile = _Profiles.FindOrAdd(ProfileKey);
 		SettingsProfile.SectionName = SectionName;
 		SettingsProfile.Settings.Empty();  // Clear previous settings
 
@@ -137,7 +153,7 @@ void UHarmonyLinkGraphics::SaveConfig() const
 {
 	QUICK_SCOPE_CYCLE_COUNTER(HarmonyLinkGraphics_SaveConfig);
 
-	for (TPair<EProfile, FSettingsProfile> Profile : Profiles)
+	for (TPair<EProfile, FSettingsProfile> Profile : _Profiles)
 	{
 		SaveSection(Profile.Value);
 	}
@@ -147,20 +163,119 @@ void UHarmonyLinkGraphics::SaveConfig() const
 	GConfig->Flush(false, Filename);
 }
 
+void UHarmonyLinkGraphics::SetSetting(const EProfile Profile, const FName Setting, const FHLConfigValue Value)
+{
+	// Find the profile name associated with the given EProfile
+	const FName* ProfileName = _ProfileNames.Find(Profile);
+	
+	if (!ProfileName)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("Profile not found."));
+		return;
+	}
+
+	FString TypeString;
+	FString ValueString;
+
+	switch (Value.GetType())
+	{
+	case EConfigValueType::Int:
+		ValueString = FString::FromInt(Value.GetValue<int32>());
+		TypeString = TEXT("int");
+		break;
+	case EConfigValueType::Float:
+		ValueString = FString::SanitizeFloat(Value.GetValue<float>());
+		TypeString = TEXT("float");
+		break;
+	case EConfigValueType::Bool:
+		ValueString = Value.GetValue<bool>() ? TEXT("true") : TEXT("false");
+		TypeString = TEXT("bool");
+		break;
+	case EConfigValueType::String:
+		ValueString = Value.GetValue<FString>();
+		TypeString = TEXT("string");
+		break;
+	}
+
+	UE_LOG(LogHarmonyLink, Log, TEXT("Applying '%s': Value='%s', Type='%s' to profile '%s'."), *Setting.ToString(), *TypeString, *ValueString, *ProfileName->ToString());
+		
+	// Find the settings associated with the profile
+	FSettingsProfile* SettingsProfile = _Profiles.Find(Profile);
+
+	if (!SettingsProfile)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("No settings found for profile %s."), *ProfileName->ToString());
+		return;
+	}
+
+	SettingsProfile->Settings.FindOrAdd(Setting) = Value;
+}
 
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 {
 	// Check if we already initialised
-	if (Instance)
+	if (_INSTANCE)
 	{
-		return Instance;
+		return _INSTANCE;
 	}
 
 	// Proceed to create a new singleton instance
-	Instance = NewObject<UHarmonyLinkGraphics>();
-	Instance->AddToRoot();
-	Instance->LoadConfig();
+	_INSTANCE = NewObject<UHarmonyLinkGraphics>();
+	_INSTANCE->AddToRoot();
+	_INSTANCE->Init();
+	
+	return _INSTANCE;
+}
+
+FSettingsProfile UHarmonyLinkGraphics::GetSettingProfile(const EProfile Profile)
+{
+	// Find the profile name associated with the given EProfile
+	const FName* ProfileName = _ProfileNames.Find(Profile);
+	
+	if (!ProfileName)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("Profile not found."));
+		return FSettingsProfile();
+	}
+
+	// Find the settings associated with the profile
+	FSettingsProfile* SettingsProfile = _Profiles.Find(Profile);
+
+	if (!SettingsProfile)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("No settings found for profile %s."), *ProfileName->ToString());
+		return FSettingsProfile();
+	}
+
+	return *SettingsProfile;
+	
+}
+
+EProfile UHarmonyLinkGraphics::GetActiveProfile() const
+{
+	return _ActiveProfile;
+}
+
+void UHarmonyLinkGraphics::SetAutomaticSwitching(const bool bAutomaticSwitch)
+{
+	_bAutomaticSwitch = bAutomaticSwitch;
+}
+
+void UHarmonyLinkGraphics::DestroySettings()
+{
+	if (_INSTANCE)
+	{
+		FWorldDelegates::OnPostWorldInitialization.RemoveAll(_INSTANCE);
+		_INSTANCE->RemoveFromRoot();
+		_INSTANCE->MarkAsGarbage();
+		_INSTANCE = nullptr;
+	}
+}
+
+void UHarmonyLinkGraphics::Init()
+{
+	LoadConfig();
 
 	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
 
@@ -169,19 +284,35 @@ UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 	// BUG: Remove this before release!
 	if (!BatteryStatus.HasBattery)
 	{
-		Instance->ApplyProfile(EProfile::BATTERY);
+		ApplyProfile(EProfile::BATTERY);
 	}
-	
-	return Instance;
 }
 
-void UHarmonyLinkGraphics::DestroySettings()
+void UHarmonyLinkGraphics::Tick()
 {
-	if (Instance)
+	if (!_bAutomaticSwitch)
 	{
-		Instance->RemoveFromRoot();
-		Instance->MarkAsGarbage();
-		Instance = nullptr;
+		return;
+	}
+
+	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
+	
+	if (BatteryStatus.HasBattery)
+	{
+		if (BatteryStatus.IsACConnected)
+		{
+			if (_ActiveProfile != EProfile::CHARGING)
+			{
+				ApplyProfile(EProfile::CHARGING);
+			}
+		}
+		else
+		{
+			if (_ActiveProfile != EProfile::BATTERY)
+			{
+				ApplyProfile(EProfile::BATTERY);
+			}
+		}
 	}
 }
 
@@ -242,38 +373,86 @@ void UHarmonyLinkGraphics::LoadDefaults()
 {
 	UE_LOG(LogHarmonyLink, Log, TEXT("LoadDefaults started."));
 
-	Profiles.Reset();
+	_Profiles.Reset();
 
 	// Iterate over ProfileNames to create default settings
-	for (const TPair<EProfile, FName>& Profile : ProfileNames)
+	for (const TPair<EProfile, FName>& Profile : _ProfileNames)
 	{
 		FSettingsProfile NewProfileSettings;
 		NewProfileSettings.SectionName = Profile.Value;
 
-		if (const TMap<FName, FHLConfigValue>* Settings = DefaultSettings.Find(Profile.Value))
+		if (const TMap<FName, FHLConfigValue>* Settings = _DefaultSettings.Find(Profile.Value))
 		{
 			NewProfileSettings.Settings = *Settings;
 		}
 
-		Profiles.Add(Profile.Key, NewProfileSettings);
+		_Profiles.Add(Profile.Key, NewProfileSettings);
+	}
+}
+
+void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::InitializationValues IVS)
+{
+	if (!World)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to Hook into World Initialisation!"))
+		return;
+	}
+	
+	if (World->IsGameWorld())
+	{
+		if (UHarmonyLinkGraphics* Settings = GetSettings())
+		{
+			if (World->IsPlayInEditor())
+			{
+				Settings->LoadConfig(true);
+			}
+
+			if (!World->GetTimerManager().TimerExists(Settings->_TickTimerHandle) || !World->GetTimerManager().IsTimerActive(Settings->_TickTimerHandle))
+			{
+				World->GetTimerManager().SetTimer(Settings->_TickTimerHandle, [Settings]
+				{
+					Settings->Tick();
+				}, _TickRate, true);
+			}
+		}
 	}
 }
 
 bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile)
 {
+	// If the profile is None, revert to the original user game settings
+	if (Profile == EProfile::NONE)
+	{
+		UE_LOG(LogHarmonyLink, Log, TEXT("Reverting to original user game settings."));
+
+		if (UGameUserSettings* UserSettings = GEngine->GetGameUserSettings())
+		{
+			UserSettings->LoadSettings(true);
+			UserSettings->ApplySettings(true);
+			_ActiveProfile = EProfile::NONE;
+			OnProfileChanged.Broadcast(_ActiveProfile);
+			UE_LOG(LogHarmonyLink, Log, TEXT("Original user game settings applied."));
+			return true;
+		}
+		
+		UE_LOG(LogHarmonyLink, Warning, TEXT("Failed to get user game settings."));
+		return false;
+	}
+
+	
 	// Find the profile name associated with the given EProfile
-	const FName* ProfileName = ProfileNames.Find(Profile);
+	const FName* ProfileName = _ProfileNames.Find(Profile);
 	
 	if (!ProfileName)
 	{
-		UE_LOG(LogHarmonyLink, Warning, TEXT("Profile not found."));
+		UE_LOG(LogHarmonyLink, Error, TEXT("Profile not found."));
 		return false;
 	}
 
 	UE_LOG(LogHarmonyLink, Log, TEXT("Applying profile %s."), *ProfileName->ToString());
 		
 	// Find the settings associated with the profile
-	FSettingsProfile* SettingsProfile = Profiles.Find(Profile);
+	FSettingsProfile* SettingsProfile = _Profiles.Find(Profile);
 
 	if (!SettingsProfile)
 	{
@@ -288,13 +467,15 @@ bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile)
 		for (const TPair<FName, FHLConfigValue>& Setting : SettingsProfile->Settings)
 		{
 			// Example of logging each setting being applied
-			UE_LOG(LogHarmonyLink, Log, TEXT("Applying setting: %s = %s"),
+			UE_LOG(LogHarmonyLink, Log, TEXT("Patching CVar override: %s = %s"),
 				   *Setting.Key.ToString(), *Setting.Value.ToString());
 
 			ApplySetting(Setting);
 		}
 	}
 
+	_ActiveProfile = Profile;
+	OnProfileChanged.Broadcast(_ActiveProfile);
 	return true;
 }
 
@@ -335,7 +516,7 @@ void UHarmonyLinkGraphics::DebugPrintProfiles() const
 {
 	UE_LOG(LogHarmonyLink, Log, TEXT("DebugPrintProfiles started."));
 
-	for (TPair<EProfile, FSettingsProfile> Profile : Profiles)
+	for (TPair<EProfile, FSettingsProfile> Profile : _Profiles)
 	{
 		PrintDebugSection(Profile.Value);
 	}
@@ -378,6 +559,6 @@ void UHarmonyLinkGraphics::PrintDebugSection(FSettingsProfile& SettingsProfile)
 
 void UHarmonyLinkGraphics::ResetInstance()
 {
-	Instance->DestroySettings();
+	_INSTANCE->DestroySettings();
 	GetSettings();
 }

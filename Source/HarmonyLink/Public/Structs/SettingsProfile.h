@@ -12,10 +12,10 @@ struct FSettingsProfile
 {
 	GENERATED_BODY()
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
 	FName SectionName;
     
-    UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
 	TMap<FName, FHLConfigValue> Settings;
 
 	// Equality operators

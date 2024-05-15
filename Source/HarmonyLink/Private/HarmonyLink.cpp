@@ -10,11 +10,12 @@ DEFINE_LOG_CATEGORY(LogHarmonyLink);
 
 void FHarmonyLinkModule::StartupModule()
 {
-	UHarmonyLinkGraphics::GetSettings();
+	
 }
 
 void FHarmonyLinkModule::ShutdownModule()
 {
+	// Ensure we safely destroy our singleton instance
 	UHarmonyLinkGraphics::DestroySettings();
 }
 
