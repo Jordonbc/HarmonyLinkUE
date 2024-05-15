@@ -260,6 +260,12 @@ EProfile UHarmonyLinkGraphics::GetActiveProfile() const
 void UHarmonyLinkGraphics::SetAutomaticSwitching(const bool bAutomaticSwitch)
 {
 	_bAutomaticSwitch = bAutomaticSwitch;
+	OnAutomaticSwitchChanged.Broadcast(_bAutomaticSwitch);
+}
+
+bool UHarmonyLinkGraphics::GetAutomaticSwitching() const
+{
+	return _bAutomaticSwitch;
 }
 
 void UHarmonyLinkGraphics::DestroySettings()

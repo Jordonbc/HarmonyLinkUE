@@ -10,6 +10,7 @@
 #include "HarmonyLinkGraphics.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProfileChanged, EProfile, Profile);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAutomaticSwitchChanged, bool, bAutomaticSwich);
 
 /**
  * 
@@ -25,6 +26,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnProfileChanged OnProfileChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAutomaticSwitchChanged OnAutomaticSwitchChanged;
 	
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
 	void LoadConfig(const bool bForceReload = false);
@@ -50,6 +54,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
 	void SetAutomaticSwitching(const bool bAutomaticSwitch);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink Settings")
+	bool GetAutomaticSwitching() const;
 
 	static void DestroySettings();
 
