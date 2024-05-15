@@ -26,9 +26,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
 	void SaveConfig() const;
 
-	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings", meta=(bCheckForCommandLineOverrides=true))
-	void ApplySettings(bool bCheckForCommandLineOverrides = true);
-
 	/** Returns the game local machine settings (resolution, windowing mode, scalability settings, etc...) */
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
 	static UHarmonyLinkGraphics* GetSettings();
@@ -41,9 +38,11 @@ private:
 	bool LoadSection(const FConfigFile& ConfigFile, const TPair<EProfile, FName> Profile);
 	void SaveSection(FSettingsProfile& SettingsProfile, const bool bFlush = false) const;
 	void LoadDefaults();
-	void ApplyProfile(EProfile Profile);
+	bool ApplyProfile(EProfile Profile);
 
 	static void ResetInstance();
+
+	static void ApplySetting(const TPair<FName, FHLConfigValue>& Setting);
 
 	// Debugging
 	void DebugPrintProfiles() const;

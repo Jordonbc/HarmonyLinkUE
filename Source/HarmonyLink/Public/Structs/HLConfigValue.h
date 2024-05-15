@@ -45,7 +45,24 @@ public:
 	FHLConfigValue(bool Value) : Type(EConfigValueType::Bool), IntValue(0), FloatValue(0.0f), BoolValue(Value), StringValue(TEXT("")) {}
 
 	FHLConfigValue(const FString& Value) : Type(EConfigValueType::String), IntValue(0), FloatValue(0.0f), BoolValue(false), StringValue(Value) {}
-
+	
+	FString ToString() const
+	{
+		switch (Type)
+		{
+		case EConfigValueType::Int:
+			return FString::Printf(TEXT("Int: %d"), IntValue);
+		case EConfigValueType::Float:
+			return FString::Printf(TEXT("Float: %f"), FloatValue);
+		case EConfigValueType::Bool:
+			return BoolValue ? TEXT("Bool: true") : TEXT("Bool: false");
+		case EConfigValueType::String:
+			return FString::Printf(TEXT("String: %s"), *StringValue);
+		default:
+			return TEXT("Unknown Type");
+		}
+	}
+	
 	EConfigValueType GetType() const
 	{
 		return Type;

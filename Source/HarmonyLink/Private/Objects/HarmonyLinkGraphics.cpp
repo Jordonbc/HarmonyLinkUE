@@ -13,17 +13,20 @@ TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::DefaultSettings =
 	{ "Battery", {
 		            { TEXT("r.ReflectionMethod"), FHLConfigValue(0) },
 					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
-					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(0) }
+					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(0) },
+					{ TEXT("r.ScreenPercentage"), FHLConfigValue(50) },
 	}},
 	{ "Charging", {
 		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
 					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
-					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) }
+					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) },
+					{ TEXT("r.ScreenPercentage"), FHLConfigValue(100) },
 	}},
-	{ "Docked", {
+	{ "Docked",	{
 		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
 					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
-					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) }
+					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) },
+					{ TEXT("r.ScreenPercentage"), FHLConfigValue(100) },
 	}}
 };
 
@@ -144,15 +147,6 @@ void UHarmonyLinkGraphics::SaveConfig() const
 	GConfig->Flush(false, Filename);
 }
 
-void UHarmonyLinkGraphics::ApplySettings(const bool bCheckForCommandLineOverrides)
-{
-	{
-		FGlobalComponentRecreateRenderStateContext Context;
-		//ApplyResolutionSettings(bCheckForCommandLineOverrides);
-		//ApplyNonResolutionSettings();
-	}
-}
-
 
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
@@ -170,7 +164,10 @@ UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 
 	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
 
-	if (BatteryStatus.HasBattery)
+	// Enabled for development testing
+	// At some point I need to implement the ability to fake and emulate these settings to make it easier to test
+	// BUG: Remove this before release!
+	if (!BatteryStatus.HasBattery)
 	{
 		Instance->ApplyProfile(EProfile::BATTERY);
 	}
@@ -262,9 +259,76 @@ void UHarmonyLinkGraphics::LoadDefaults()
 	}
 }
 
-void UHarmonyLinkGraphics::ApplyProfile(EProfile Profile)
+bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile)
 {
+	// Find the profile name associated with the given EProfile
+	const FName* ProfileName = ProfileNames.Find(Profile);
 	
+	if (!ProfileName)
+	{
+		UE_LOG(LogHarmonyLink, Warning, TEXT("Profile not found."));
+		return false;
+	}
+
+	UE_LOG(LogHarmonyLink, Log, TEXT("Applying profile %s."), *ProfileName->ToString());
+		
+	// Find the settings associated with the profile
+	FSettingsProfile* SettingsProfile = Profiles.Find(Profile);
+
+	if (!SettingsProfile)
+	{
+		UE_LOG(LogHarmonyLink, Warning, TEXT("No settings found for profile %s."), *ProfileName->ToString());
+		return false;
+	}
+
+	{
+		FGlobalComponentRecreateRenderStateContext Context;
+
+		// Example of applying settings (actual application depends on your implementation)
+		for (const TPair<FName, FHLConfigValue>& Setting : SettingsProfile->Settings)
+		{
+			// Example of logging each setting being applied
+			UE_LOG(LogHarmonyLink, Log, TEXT("Applying setting: %s = %s"),
+				   *Setting.Key.ToString(), *Setting.Value.ToString());
+
+			ApplySetting(Setting);
+		}
+	}
+
+	return true;
+}
+
+void UHarmonyLinkGraphics::ApplySetting(const TPair<FName, FHLConfigValue>& Setting)
+{
+	// Apply the setting based on the key (CVar)
+	IConsoleManager& ConsoleManager = IConsoleManager::Get();
+	IConsoleVariable* CVar = ConsoleManager.FindConsoleVariable(*Setting.Key.ToString());
+
+	if (CVar)
+	{
+		switch (Setting.Value.GetType())
+		{
+		case EConfigValueType::Bool:
+			CVar->Set(Setting.Value.GetValue<bool>(), ECVF_SetByGameSetting);
+			break;
+                
+		case EConfigValueType::Float:
+			CVar->Set(Setting.Value.GetValue<float>(), ECVF_SetByGameSetting);
+			break;
+                
+		case EConfigValueType::Int:
+			CVar->Set(Setting.Value.GetValue<int32>(), ECVF_SetByGameSetting);
+			break;
+                
+		default:
+			UE_LOG(LogHarmonyLink, Warning, TEXT("Unsupported value type for setting: %s"), *Setting.Key.ToString());
+			break;
+		}
+	}
+	else
+	{
+		UE_LOG(LogHarmonyLink, Warning, TEXT("Console variable not found: %s"), *Setting.Key.ToString());
+	}
 }
 
 void UHarmonyLinkGraphics::DebugPrintProfiles() const
