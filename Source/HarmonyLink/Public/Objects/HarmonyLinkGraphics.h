@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Structs/HLConfigValue.h"
+#include "Enums/Profile.h"
+#include "Structs/SettingsProfile.h"
 
 #include "UObject/Object.h"
 #include "HarmonyLinkGraphics.generated.h"
@@ -20,19 +21,13 @@ public:
 	UHarmonyLinkGraphics();
 	
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
-	void LoadProfile(const FName& ProfileName, const bool bForceReload = false);
+	void LoadConfig(const bool bForceReload = false);
 
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
-	void SaveProfile(const FName& ProfileName);
+	void SaveConfig() const;
 
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings", meta=(bCheckForCommandLineOverrides=true))
 	void ApplySettings(bool bCheckForCommandLineOverrides = true);
-
-	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
-	void ApplyNonResolutionSettings();
-
-	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
-	void ApplyResolutionSettings(bool bCheckForCommandLineOverrides);
 
 	/** Returns the game local machine settings (resolution, windowing mode, scalability settings, etc...) */
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
@@ -42,29 +37,30 @@ public:
 
 private:
 	void CreateDefaultConfigFile();
-	bool LoadSettingsFromConfig(const FString& SectionName);
+	bool LoadSettingsFromConfig();
 
-	void SaveSection(const FName& SectionName, const TMap<FName, FHLConfigValue>& Settings) const;
+	bool LoadSection(const FConfigFile& ConfigFile, const TPair<EProfile, FName> Profile);
+
+	void SaveSection(FSettingsProfile& SettingsProfile, const bool bFlush = false) const;
+
+	void LoadDefaults();
+
+	void DebugPrintProfiles() const;
+	static void PrintDebugSection(FSettingsProfile& SettingsProfile);
 
 	static void ResetInstance();
 
-	UPROPERTY(Config)
-	FName _ProfileName = NAME_None;
-
 	static FString IniLocation;
-	
-	static FName BatteryProfile;
-	static FName ChargingProfile;
-	static FName DockedProfile;
 
-	TMap<FName, int32> SettingsMap;
+	TMap<EProfile, FName> ProfileNames = {
+		{EProfile::BATTERY, "Battery"},
+		{EProfile::CHARGING, "Charging"},
+		{EProfile::DOCKED, "Docked"},
+	};
 
-	// Maps to store configuration settings for each profile
-	TMap<FName, FHLConfigValue> BatterySettings;
-	TMap<FName, FHLConfigValue> ChargingSettings;
-	TMap<FName, FHLConfigValue> DockedSettings;
+	TMap<EProfile, FSettingsProfile> Profiles;
 
-	static TMap<FName, int32> DefaultSettingsMap;
+	static TMap<FName, TMap<FName, FHLConfigValue>> DefaultSettings;
 
 	static UHarmonyLinkGraphics* Instance;
 };

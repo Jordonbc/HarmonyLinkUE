@@ -53,6 +53,34 @@ public:
 
 	template <typename T>
 	T GetValue() const;
+
+	// Equality operators
+	bool operator==(const FHLConfigValue& Other) const
+	{
+		if (Type != Other.Type)
+		{
+			return false;
+		}
+
+		switch (Type)
+		{
+		case EConfigValueType::Int:
+			return IntValue == Other.IntValue;
+		case EConfigValueType::Float:
+			return FloatValue == Other.FloatValue;
+		case EConfigValueType::Bool:
+			return BoolValue == Other.BoolValue;
+		case EConfigValueType::String:
+			return StringValue == Other.StringValue;
+		default:
+			return false;
+		}
+	}
+
+	bool operator!=(const FHLConfigValue& Other) const
+	{
+		return !(*this == Other);
+	}
 };
 
 // Specializations of the templated getter
@@ -82,4 +110,28 @@ inline FString FHLConfigValue::GetValue<FString>() const
 {
 	ensure(Type == EConfigValueType::String);
 	return StringValue;
+}
+
+// Hash function
+FORCEINLINE uint32 GetTypeHash(const FHLConfigValue& Value)
+{
+	uint32 Hash = GetTypeHash(Value.GetType());
+
+	switch (Value.GetType())
+	{
+	case EConfigValueType::Int:
+		Hash = HashCombine(Hash, GetTypeHash(Value.GetValue<int32>()));
+		break;
+	case EConfigValueType::Float:
+		Hash = HashCombine(Hash, GetTypeHash(Value.GetValue<float>()));
+		break;
+	case EConfigValueType::Bool:
+		Hash = HashCombine(Hash, GetTypeHash(Value.GetValue<bool>()));
+		break;
+	case EConfigValueType::String:
+		Hash = HashCombine(Hash, GetTypeHash(Value.GetValue<FString>()));
+		break;
+	}
+
+	return Hash;
 }

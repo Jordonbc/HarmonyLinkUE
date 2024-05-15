@@ -8,6 +8,8 @@ public class HarmonyLink : ModuleRules
 	public HarmonyLink(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+
+		IWYUSupport = IWYUSupport.Full;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {

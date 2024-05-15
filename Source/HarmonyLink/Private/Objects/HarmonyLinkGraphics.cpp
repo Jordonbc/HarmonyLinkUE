@@ -7,108 +7,152 @@
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::Instance = nullptr;
 FString UHarmonyLinkGraphics::IniLocation = "HarmonyLink";
-FName UHarmonyLinkGraphics::BatteryProfile = "Battery";
-FName UHarmonyLinkGraphics::ChargingProfile = "Charging";
-FName UHarmonyLinkGraphics::DockedProfile = "Docked";
 
-TMap<FName, int32> UHarmonyLinkGraphics::DefaultSettingsMap = {{"Test", 0}};
+TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::DefaultSettings = {
+	{ "Battery", {
+		            { TEXT("r.ReflectionMethod"), FHLConfigValue(0) },
+					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
+					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(0) }
+	}},
+	{ "Charging", {
+		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
+					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
+					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) }
+	}},
+	{ "Docked", {
+		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
+					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
+					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) }
+	}}
+};
 
 UHarmonyLinkGraphics::UHarmonyLinkGraphics()
 {
 	UE_LOG(LogHarmonyLink, Warning, TEXT("HarmonyLinkGraphics initialized."));
-	
-
-	// Initialize settings for Low Graphics Profile
-	BatterySettings.Add(TEXT("LowResolutionX"), FHLConfigValue(1280));
-	BatterySettings.Add(TEXT("LowResolutionY"), FHLConfigValue(720));
-	BatterySettings.Add(TEXT("LowTextureQuality"), FHLConfigValue(0.5f));
-
-	// Initialize settings for Medium Graphics Profile
-	ChargingSettings.Add(TEXT("MediumResolutionX"), FHLConfigValue(1920));
-	ChargingSettings.Add(TEXT("MediumResolutionY"), FHLConfigValue(1080));
-	ChargingSettings.Add(TEXT("MediumTextureQuality"), FHLConfigValue(0.75f));
-
-	// Initialize settings for High Graphics Profile
-	DockedSettings.Add(TEXT("HighResolutionX"), FHLConfigValue(3840));
-	DockedSettings.Add(TEXT("HighResolutionY"), FHLConfigValue(2160));
-	DockedSettings.Add(TEXT("HighTextureQuality"), FHLConfigValue(1.0f));
 }
 
-void UHarmonyLinkGraphics::LoadProfile(const FName& ProfileName, const bool bForceReload)
+void UHarmonyLinkGraphics::LoadConfig(const bool bForceReload)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(HarmonyLinkGraphics_LoadSettings);
 
-	// Construct the section name
-	FString SectionName = FString::Printf(TEXT("GraphicsProfile.%s"), *ProfileName.ToString());
-
-	// Clear the previous settings
-	SettingsMap.Empty();
-
 	// Load the settings into the map
-	if (!LoadSettingsFromConfig(SectionName))
+	if (!LoadSettingsFromConfig())
 	{
 		// Retry 2nd time
-		LoadSettingsFromConfig(SectionName);
+		LoadSettingsFromConfig();
 	}
+
+	DebugPrintProfiles();
 }
 
-bool UHarmonyLinkGraphics::LoadSettingsFromConfig(const FString& SectionName)
+bool UHarmonyLinkGraphics::LoadSettingsFromConfig()
 {
-	// Load the configuration for the specified profile
+	// Load the configuration from the INI file
 	FConfigFile ConfigFile;
 
-	// Normalize the INI file path
-	const FString IniFilePath = FPaths::Combine(FPaths::ProjectConfigDir(), IniLocation + TEXT(".ini"));
-	const FString NormalizedIniFilePath = FConfigCacheIni::NormalizeConfigIniPath(IniFilePath);
+	const FString Filename = GetDefaultConfigFilename();
 
-	if (FConfigCacheIni::LoadLocalIniFile(ConfigFile, *IniLocation, true, nullptr, false))
+	if (FConfigCacheIni::LoadLocalIniFile(ConfigFile, *Filename, true, nullptr, false))
 	{
-		if (const FConfigSection* Section = ConfigFile.Find(*SectionName))
-		{
-			for (const auto& ValueIt : *Section)
-			{
-				int32 Value = FCString::Atoi(*ValueIt.Value.GetValue());
-				SettingsMap.Add(*ValueIt.Key.ToString(), Value);
-			}
+		// Load each profile section
+		bool bLoaded = true;
 
+		for (const TPair<EProfile, FName>& Profile : ProfileNames)
+		{
+			if (!LoadSection(ConfigFile, Profile))
+			{
+				UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load section: '%s'"), *Profile.Value.ToString());
+				bLoaded = false;
+			}
+		}
+
+		// Check if all profiles were loaded successfully
+		if (bLoaded)
+		{
+			UE_LOG(LogHarmonyLink, Log, TEXT("Successfully loaded config file: %s"), *Filename);
 			return true;
 		}
 	}
 
+	UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load config file: %s"), *Filename);
 	CreateDefaultConfigFile();
 	return false;
 }
 
-void UHarmonyLinkGraphics::SaveProfile(const FName& ProfileName)
+bool UHarmonyLinkGraphics::LoadSection(const FConfigFile& ConfigFile, const TPair<EProfile, FName> Profile)
 {
-	QUICK_SCOPE_CYCLE_COUNTER(HarmonyLinkGraphics_SaveSettings);
+	const FName& SectionName = Profile.Value;
+	const EProfile ProfileKey = Profile.Key;
 
-	// Normalize the INI file path
-	const FString IniFilePath = FPaths::Combine(FPaths::ProjectConfigDir(), IniLocation + TEXT(".ini"));
-	const FString NormalizedIniFilePath = FConfigCacheIni::NormalizeConfigIniPath(IniFilePath);
-	
-	FConfigFile ConfigFile;
-	ConfigFile.Write(NormalizedIniFilePath);
+	if (const FConfigSection* Section = ConfigFile.FindSection(*SectionName.ToString()))
+	{
+		FSettingsProfile& SettingsProfile = Profiles.FindOrAdd(ProfileKey);
+		SettingsProfile.SectionName = SectionName;
+		SettingsProfile.Settings.Empty();  // Clear previous settings
+
+		for (const auto& ValueIt : *Section)
+		{
+			FString ValueString = ValueIt.Value.GetValue();
+			FString Value, Type;
+
+			// Parse the Value and Type from the string
+			if (ValueString.Split(TEXT(", Type="), &Value, &Type))
+			{
+				Value = Value.RightChop(7); // Remove "(Value=" prefix
+				Type = Type.LeftChop(1); // Remove ")" suffix
+
+				if (Type == "int")
+				{
+					const int32 IntValue = FCString::Atoi(*Value);
+					SettingsProfile.Settings.Add(ValueIt.Key, FHLConfigValue(IntValue));
+				}
+				else if (Type == "float")
+				{
+					const float FloatValue = FCString::Atof(*Value);
+					SettingsProfile.Settings.Add(ValueIt.Key, FHLConfigValue(FloatValue));
+				}
+				else if (Type == "bool")
+				{
+					const bool BoolValue = Value == "true";
+					SettingsProfile.Settings.Add(ValueIt.Key, FHLConfigValue(BoolValue));
+				}
+				else if (Type == "string")
+				{
+					SettingsProfile.Settings.Add(ValueIt.Key, FHLConfigValue(Value));
+				}
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+void UHarmonyLinkGraphics::SaveConfig() const
+{
+	QUICK_SCOPE_CYCLE_COUNTER(HarmonyLinkGraphics_SaveConfig);
+
+	for (TPair<EProfile, FSettingsProfile> Profile : Profiles)
+	{
+		SaveSection(Profile.Value);
+	}
+
+	const FString Filename = GetDefaultConfigFilename();
+	UE_LOG(LogHarmonyLink, Log, TEXT("Flushing file: '%s'"), *Filename);
+	GConfig->Flush(false, Filename);
 }
 
 void UHarmonyLinkGraphics::ApplySettings(const bool bCheckForCommandLineOverrides)
 {
 	{
 		FGlobalComponentRecreateRenderStateContext Context;
-		ApplyResolutionSettings(bCheckForCommandLineOverrides);
-		ApplyNonResolutionSettings();
+		//ApplyResolutionSettings(bCheckForCommandLineOverrides);
+		//ApplyNonResolutionSettings();
 	}
-
-	SaveProfile(_ProfileName);
 }
 
-void UHarmonyLinkGraphics::ApplyNonResolutionSettings()
-{
-}
 
-void UHarmonyLinkGraphics::ApplyResolutionSettings(bool bCheckForCommandLineOverrides)
-{
-}
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 {
@@ -116,7 +160,7 @@ UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 	{
 		Instance = NewObject<UHarmonyLinkGraphics>();
 		Instance->AddToRoot();
-		Instance->LoadProfile(ChargingProfile);
+		Instance->LoadConfig();
 	}
 	
 	return Instance;
@@ -134,39 +178,120 @@ void UHarmonyLinkGraphics::DestroySettings()
 
 void UHarmonyLinkGraphics::CreateDefaultConfigFile()
 {
-	UE_LOG(LogHarmonyLink, Log, TEXT("CreateDefaultConfigFile started."));
+	UE_LOG(LogHarmonyLink, Log, TEXT("Creating default config file."));
+
+	LoadDefaults();
+	SaveConfig();
 	
-	SaveSection(BatteryProfile, BatterySettings);
-	SaveSection(ChargingProfile, ChargingSettings);
-	SaveSection(DockedProfile, DockedSettings);
+	UE_LOG(LogHarmonyLink, Log, TEXT("Default config file created."));
 }
 
-void UHarmonyLinkGraphics::SaveSection(const FName& SectionName, const TMap<FName, FHLConfigValue>& Settings) const
+void UHarmonyLinkGraphics::SaveSection(FSettingsProfile& SettingsProfile, const bool bFlush) const
 {
 	if (GConfig)
 	{
 		const FString Filename = GetDefaultConfigFilename();
-		for (const auto& Setting : Settings)
+		for (const auto& Setting : SettingsProfile.Settings)
 		{
+			FString TypeString;
+			FString ValueString;
+
 			switch (Setting.Value.GetType())
 			{
 			case EConfigValueType::Int:
-				GConfig->SetInt(*SectionName.ToString(), *Setting.Key.ToString(), Setting.Value.GetValue<int32>(), Filename);
+				ValueString = FString::FromInt(Setting.Value.GetValue<int32>());
+				TypeString = TEXT("int");
 				break;
 			case EConfigValueType::Float:
-				GConfig->SetFloat(*SectionName.ToString(), *Setting.Key.ToString(), Setting.Value.GetValue<float>(), Filename);
+				ValueString = FString::SanitizeFloat(Setting.Value.GetValue<float>());
+				TypeString = TEXT("float");
 				break;
 			case EConfigValueType::Bool:
-				GConfig->SetBool(*SectionName.ToString(), *Setting.Key.ToString(), Setting.Value.GetValue<bool>(), Filename);
+				ValueString = Setting.Value.GetValue<bool>() ? TEXT("true") : TEXT("false");
+				TypeString = TEXT("bool");
 				break;
 			case EConfigValueType::String:
-				GConfig->SetString(*SectionName.ToString(), *Setting.Key.ToString(), *Setting.Value.GetValue<FString>(), Filename);
+				ValueString = Setting.Value.GetValue<FString>();
+				TypeString = TEXT("string");
 				break;
 			}
+
+			const FString ConfigValue = FString::Printf(TEXT("(Value=%s, Type=%s)"), *ValueString, *TypeString);
+			GConfig->SetString(*SettingsProfile.SectionName.ToString(), *Setting.Key.ToString(), *ConfigValue, Filename);
 		}
 
-		UE_LOG(LogHarmonyLink, Log, TEXT("Saving config file: '%s'"), *Filename)
-		GConfig->Flush(false, Filename);
+		UE_LOG(LogHarmonyLink, Log, TEXT("Saving config file: '%s'"), *Filename);
+		if (bFlush)
+		{
+			UE_LOG(LogHarmonyLink, Log, TEXT("Flushing file: '%s'"), *Filename);
+			GConfig->Flush(false, Filename);
+		}
+	}
+}
+
+void UHarmonyLinkGraphics::LoadDefaults()
+{
+	UE_LOG(LogHarmonyLink, Log, TEXT("LoadDefaults started."));
+
+	Profiles.Reset();
+
+	// Iterate over ProfileNames to create default settings
+	for (const TPair<EProfile, FName>& Profile : ProfileNames)
+	{
+		FSettingsProfile NewProfileSettings;
+		NewProfileSettings.SectionName = Profile.Value;
+
+		if (const TMap<FName, FHLConfigValue>* Settings = DefaultSettings.Find(Profile.Value))
+		{
+			NewProfileSettings.Settings = *Settings;
+		}
+
+		Profiles.Add(Profile.Key, NewProfileSettings);
+	}
+}
+
+void UHarmonyLinkGraphics::DebugPrintProfiles() const
+{
+	UE_LOG(LogHarmonyLink, Log, TEXT("DebugPrintProfiles started."));
+
+	for (TPair<EProfile, FSettingsProfile> Profile : Profiles)
+	{
+		PrintDebugSection(Profile.Value);
+	}
+    
+	UE_LOG(LogHarmonyLink, Log, TEXT("DebugPrintProfiles completed."));
+}
+
+void UHarmonyLinkGraphics::PrintDebugSection(FSettingsProfile& SettingsProfile)
+{
+	UE_LOG(LogHarmonyLink, Warning, TEXT("[%s]"), *SettingsProfile.SectionName.ToString());
+
+	for (const auto& Setting : SettingsProfile.Settings)
+	{
+		FString ValueString;
+		FString TypeString;
+
+		switch (Setting.Value.GetType())
+		{
+		case EConfigValueType::Int:
+			ValueString = FString::FromInt(Setting.Value.GetValue<int32>());
+			TypeString = TEXT("int");
+			break;
+		case EConfigValueType::Float:
+			ValueString = FString::SanitizeFloat(Setting.Value.GetValue<float>());
+			TypeString = TEXT("float");
+			break;
+		case EConfigValueType::Bool:
+			ValueString = Setting.Value.GetValue<bool>() ? TEXT("true") : TEXT("false");
+			TypeString = TEXT("bool");
+			break;
+		case EConfigValueType::String:
+			ValueString = Setting.Value.GetValue<FString>();
+			TypeString = TEXT("string");
+			break;
+		}
+
+		UE_LOG(LogHarmonyLink, Warning, TEXT("Key: %s = V=%s, T=%s "), *Setting.Key.ToString(), *ValueString, *TypeString);
 	}
 }
 
