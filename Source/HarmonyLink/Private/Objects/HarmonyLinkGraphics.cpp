@@ -8,7 +8,6 @@
 #include "GameFramework/GameUserSettings.h"
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::_INSTANCE = nullptr;
-FString UHarmonyLinkGraphics::_IniLocation = "HarmonyLink";
 int32 UHarmonyLinkGraphics::_TickRate = 1;
 
 TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::_DefaultSettings = {
@@ -38,6 +37,7 @@ UHarmonyLinkGraphics::UHarmonyLinkGraphics()
 
 	_bAutomaticSwitch = true;
 	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UHarmonyLinkGraphics::OnPostWorldInitialization);
+	FWorldDelegates::OnPreWorldFinishDestroy.AddUObject(this, &UHarmonyLinkGraphics::OnWorldEnd);
 }
 
 UHarmonyLinkGraphics::~UHarmonyLinkGraphics()
@@ -64,7 +64,7 @@ bool UHarmonyLinkGraphics::LoadSettingsFromConfig()
 	// Load the configuration from the INI file
 	FConfigFile ConfigFile;
 
-	const FString Filename = GetDefaultConfigFilename();
+	const FString Filename = GetConfigDirectoryFile();
 
 	if (!GConfig)
 	{
@@ -158,7 +158,7 @@ void UHarmonyLinkGraphics::SaveConfig() const
 		SaveSection(Profile.Value);
 	}
 
-	const FString Filename = GetDefaultConfigFilename();
+	const FString Filename = GetConfigDirectoryFile();
 	UE_LOG(LogHarmonyLink, Log, TEXT("Flushing file: '%s'"), *Filename);
 	GConfig->Flush(false, Filename);
 }
@@ -272,7 +272,9 @@ void UHarmonyLinkGraphics::DestroySettings()
 {
 	if (_INSTANCE)
 	{
+		UE_LOG(LogHarmonyLink, Log, TEXT("Destroying UHarmonyLinkGraphics."))
 		FWorldDelegates::OnPostWorldInitialization.RemoveAll(_INSTANCE);
+		FWorldDelegates::OnPreWorldFinishDestroy.RemoveAll(_INSTANCE);
 		_INSTANCE->RemoveFromRoot();
 		_INSTANCE->MarkAsGarbage();
 		_INSTANCE = nullptr;
@@ -290,36 +292,54 @@ void UHarmonyLinkGraphics::Init()
 	// BUG: Remove this before release!
 	if (!BatteryStatus.HasBattery)
 	{
-		ApplyProfile(EProfile::BATTERY);
+		ApplyProfileInternal(EProfile::BATTERY);
 	}
 }
 
 void UHarmonyLinkGraphics::Tick()
 {
-	if (!_bAutomaticSwitch)
+	Async(EAsyncExecution::Thread, [this]()
 	{
-		return;
-	}
+		const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
 
-	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
-	
-	if (BatteryStatus.HasBattery)
-	{
-		if (BatteryStatus.IsACConnected)
+		if (BatteryStatus.BatteryPercent != _LastBatteryPercentage)
 		{
-			if (_ActiveProfile != EProfile::CHARGING)
+			// Ensure thread-safe broadcasting
+			Async(EAsyncExecution::TaskGraphMainThread, [this, BatteryStatus]()
 			{
-				ApplyProfile(EProfile::CHARGING);
+				OnBatteryLevelChanged.Broadcast(BatteryStatus.BatteryPercent);
+			});
+		}
+
+		if (!_bAutomaticSwitch)
+		{
+			return;
+		}
+
+		if (BatteryStatus.HasBattery)
+		{
+			if (BatteryStatus.IsACConnected)
+			{
+				if (_ActiveProfile != EProfile::CHARGING)
+				{
+					Async(EAsyncExecution::TaskGraphMainThread, [this]()
+					{
+						ApplyProfileInternal(EProfile::CHARGING);
+					});
+				}
+			}
+			else
+			{
+				if (_ActiveProfile != EProfile::BATTERY)
+				{
+					Async(EAsyncExecution::TaskGraphMainThread, [this]()
+					{
+						ApplyProfileInternal(EProfile::BATTERY);
+					});
+				}
 			}
 		}
-		else
-		{
-			if (_ActiveProfile != EProfile::BATTERY)
-			{
-				ApplyProfile(EProfile::BATTERY);
-			}
-		}
-	}
+	});
 }
 
 void UHarmonyLinkGraphics::CreateDefaultConfigFile()
@@ -332,11 +352,22 @@ void UHarmonyLinkGraphics::CreateDefaultConfigFile()
 	UE_LOG(LogHarmonyLink, Log, TEXT("Default config file created."));
 }
 
-void UHarmonyLinkGraphics::SaveSection(FSettingsProfile& SettingsProfile, const bool bFlush) const
+FString UHarmonyLinkGraphics::GetConfigDirectoryFile()
+{
+	FString ConfigFileName = "HarmonyLink.ini"; // Replace with your actual config file name
+
+#if WITH_EDITOR
+	return FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Config"), ConfigFileName);
+#else
+	return FPaths::Combine(FPaths::ProjectConfigDir(), ConfigFileName);
+#endif
+}
+
+void UHarmonyLinkGraphics::SaveSection(FSettingsProfile& SettingsProfile, const bool bFlush)
 {
 	if (GConfig)
 	{
-		const FString Filename = GetDefaultConfigFilename();
+		const FString Filename = GetConfigDirectoryFile();
 		for (const auto& Setting : SettingsProfile.Settings)
 		{
 			FString TypeString;
@@ -396,35 +427,7 @@ void UHarmonyLinkGraphics::LoadDefaults()
 	}
 }
 
-void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::InitializationValues IVS)
-{
-	if (!World)
-	{
-		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to Hook into World Initialisation!"))
-		return;
-	}
-	
-	if (World->IsGameWorld())
-	{
-		if (UHarmonyLinkGraphics* Settings = GetSettings())
-		{
-			if (World->IsPlayInEditor())
-			{
-				Settings->LoadConfig(true);
-			}
-
-			if (!World->GetTimerManager().TimerExists(Settings->_TickTimerHandle) || !World->GetTimerManager().IsTimerActive(Settings->_TickTimerHandle))
-			{
-				World->GetTimerManager().SetTimer(Settings->_TickTimerHandle, [Settings]
-				{
-					Settings->Tick();
-				}, _TickRate, true);
-			}
-		}
-	}
-}
-
-bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile)
+bool UHarmonyLinkGraphics::ApplyProfileInternal(const EProfile Profile)
 {
 	// If the profile is None, revert to the original user game settings
 	if (Profile == EProfile::NONE)
@@ -483,6 +486,62 @@ bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile)
 	_ActiveProfile = Profile;
 	OnProfileChanged.Broadcast(_ActiveProfile);
 	return true;
+}
+
+void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::InitializationValues IVS)
+{
+	if (!World)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to Hook into World Initialisation!"))
+		return;
+	}
+	
+	if (World->IsGameWorld())
+	{
+		if (UHarmonyLinkGraphics* Settings = GetSettings())
+		{
+			if (World->IsPlayInEditor())
+			{
+				Settings->LoadConfig(true);
+			}
+
+			if (!World->GetTimerManager().TimerExists(Settings->_TickTimerHandle) || !World->GetTimerManager().IsTimerActive(Settings->_TickTimerHandle))
+			{
+				World->GetTimerManager().SetTimer(Settings->_TickTimerHandle, [Settings]
+				{
+					Settings->Tick();
+				}, _TickRate, true);
+			}
+		}
+	}
+}
+
+void UHarmonyLinkGraphics::OnWorldEnd(UWorld* World)
+{
+	if (!World)
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("World Already destroyed"))
+		return;
+	}
+	
+	if(World->GetTimerManager().TimerExists(_TickTimerHandle))
+	{
+		World->GetTimerManager().ClearTimer(_TickTimerHandle);
+	}
+
+	// Ensure we safely destroy our singleton instance
+	DestroySettings();
+}
+
+bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile, const bool bDisableAuto)
+{
+	// Manual profile change, turn off automatic switching
+	if (bDisableAuto)
+	{
+		_bAutomaticSwitch = false;
+	}
+	
+	return ApplyProfileInternal(Profile);
 }
 
 void UHarmonyLinkGraphics::ApplySetting(const TPair<FName, FHLConfigValue>& Setting)
