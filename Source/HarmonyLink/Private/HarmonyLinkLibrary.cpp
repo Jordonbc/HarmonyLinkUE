@@ -11,13 +11,7 @@ bool UHarmonyLinkLibrary::IsWine()
 
 bool UHarmonyLinkLibrary::IsLinux()
 {
-#if PLATFORM_WINDOWS
-	return IsWine();
-#elif PLATFORM_LINUX
-	return true;
-#else
-	return false;
-#endif
+	return HarmonyLinkLib::get_is_linux();
 }
 
 bool UHarmonyLinkLibrary::IsSteamDeck()

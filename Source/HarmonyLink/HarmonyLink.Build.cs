@@ -52,23 +52,22 @@ public class HarmonyLink : ModuleRules
 			}
 			);
 		
-		// Platform-specific settings
-		if (Target.Platform == UnrealTargetPlatform.Win64)
-		{
-			PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.lib"));
-			RuntimeDependencies.Add("$(BinaryOutputDir)/HarmonyLinkLib.dll", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Win64/HarmonyLinkLib.dll"));
-		}
-		else if (Target.Platform == UnrealTargetPlatform.Linux)
-		{
-			PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Linux/libHarmonyLinkLib.so"));
-			RuntimeDependencies.Add("$(BinaryOutputDir)/libHarmonyLinkLib.so", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Linux/libHarmonyLinkLib.so"));
-		}
-		
+		// Platform-specific settings for static libraries
+        if (Target.Platform == UnrealTargetPlatform.Win64)
+        {
+            PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/lib/Win64/HarmonyLinkLibStatic.lib"));
+            PublicDefinitions.Add("HARMONYLINKLIB_STATIC=1");
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Linux)
+        {
+            PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/lib/Linux/libHarmonyLinkLibStatic.a"));
+            PublicDefinitions.Add("HARMONYLINKLIB_STATIC=1");
+        }
 		// I shall include this if anyone wishes to provide Mac binaries of HarmonyLink but these are not included by default as I don't own one.
-		else if (Target.Platform == UnrealTargetPlatform.Mac)
-		{
-			PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Mac/HarmonyLinkLib.dylib"));
-			RuntimeDependencies.Add("$(BinaryOutputDir)/HarmonyLinkLib.dylib", Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/bin/Mac/HarmonyLinkLib.dylib"));
-		}
+        else if (Target.Platform == UnrealTargetPlatform.Mac)
+        {
+            PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/lib/Mac/libHarmonyLinkLibStatic.a"));
+            PublicDefinitions.Add("HARMONYLINKLIB_STATIC=1");
+        }
 	}
 }

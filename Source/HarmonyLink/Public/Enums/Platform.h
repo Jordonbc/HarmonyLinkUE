@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "Platform.generated.h"
 
+// Undefine the LINUX macro to avoid conflicts with the enum definition.
+#undef LINUX
+
 /*
  * Enum representing different operating system platforms.
  */
