@@ -11,11 +11,6 @@ FCPUInfo::FCPUInfo(HarmonyLinkLib::FCPUInfo* cpu_info)
 		PhysicalCores = cpu_info->Physical_Cores;
 		LogicalCores = cpu_info->Logical_Cores;
 
-		for (const HarmonyLinkLib::FString& Flag : cpu_info->Flags)
-		{
-			Flags.Add(Flag.c_str());
-		}
-
 		cpu_info->free();
 	}
 	else

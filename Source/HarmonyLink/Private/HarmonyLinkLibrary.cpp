@@ -2,7 +2,7 @@
 
 #include "HarmonyLinkLibrary.h"
 
-#include <HarmonyLinkLib.h>
+#include "HarmonyLinkLib.h"
 
 bool UHarmonyLinkLibrary::IsWine()
 {

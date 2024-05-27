@@ -33,10 +33,6 @@ struct FCPUInfo
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
 	int32 LogicalCores = 0;
 
-	// A set of flags representing various features or capabilities of the CPU.
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
-	TSet<FString> Flags;
-
 	// Constructor that initializes the struct with information from an external CPU info source.
 	// @param cpu_info Pointer to an external FCPUInfo structure to copy data from.
 	FCPUInfo(HarmonyLinkLib::FCPUInfo* cpu_info);

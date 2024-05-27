@@ -21,7 +21,6 @@ public class HarmonyLink : ModuleRules
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
-				"ThirdParty/HarmonyLinkLib/include"
 			}
 			);
 			
@@ -40,34 +39,10 @@ public class HarmonyLink : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				// ... add private dependencies that you statically link with here ...	
+				// ... add private dependencies that you statically link with here ...
+				"HarmonyLinkLib",
 			}
 			);
-		
-		
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				// ... add any modules that your module loads dynamically here ...
-			}
-			);
-		
-		// Platform-specific settings for static libraries
-        if (Target.Platform == UnrealTargetPlatform.Win64)
-        {
-            PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/lib/Win64/HarmonyLinkLibStatic.lib"));
-            PublicDefinitions.Add("HARMONYLINKLIB_STATIC=1");
-        }
-        else if (Target.Platform == UnrealTargetPlatform.Linux)
-        {
-            PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/lib/Linux/libHarmonyLinkLibStatic.a"));
-            PublicDefinitions.Add("HARMONYLINKLIB_STATIC=1");
-        }
-		// I shall include this if anyone wishes to provide Mac binaries of HarmonyLink but these are not included by default as I don't own one.
-        else if (Target.Platform == UnrealTargetPlatform.Mac)
-        {
-            PublicAdditionalLibraries.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/HarmonyLinkLib/lib/Mac/libHarmonyLinkLibStatic.a"));
-            PublicDefinitions.Add("HARMONYLINKLIB_STATIC=1");
-        }
+
 	}
 }
