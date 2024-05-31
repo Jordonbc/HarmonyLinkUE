@@ -6,10 +6,23 @@
 #include "HarmonyLink.h"
 #include "HarmonyLinkLibrary.h"
 #include "GameFramework/GameUserSettings.h"
+#include "Kismet/GameplayStatics.h"
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::_INSTANCE = nullptr;
 int32 UHarmonyLinkGraphics::_TickRate = 1;
 FTimerHandle UHarmonyLinkGraphics::_TickTimerHandle = FTimerHandle();
+TSharedPtr<FConfigFile> UHarmonyLinkGraphics::_ConfigFile = nullptr;
+bool UHarmonyLinkGraphics::_bAutomaticSwitch = false;
+int32 UHarmonyLinkGraphics::_LastBatteryPercentage = 0;
+EProfile UHarmonyLinkGraphics::_ActiveProfile = EProfile::NONE;
+TMap<EProfile, FSettingsProfile> UHarmonyLinkGraphics::_Profiles = TMap<EProfile, FSettingsProfile>();
+
+TMap<EProfile, FName> UHarmonyLinkGraphics::_ProfileNames =
+{
+	{EProfile::BATTERY, "Battery"},
+	{EProfile::CHARGING, "Charging"},
+	{EProfile::DOCKED, "Docked"},
+};
 
 /**
  * @brief Default graphics settings for different power states in HarmonyLink.
@@ -25,115 +38,125 @@ FTimerHandle UHarmonyLinkGraphics::_TickTimerHandle = FTimerHandle();
  */
 TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::_DefaultSettings = {
 	{ "Battery", {
-		            { TEXT("r.ReflectionMethod"), FHLConfigValue(0) },
-					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
-					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(0) },
-					{ TEXT("r.ScreenPercentage"), FHLConfigValue(50) },
+//		            { TEXT("r.ReflectionMethod"), FHLConfigValue(0) },
+//					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
+//					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(0) },
+//					{ TEXT("r.ScreenPercentage"), FHLConfigValue(50) },
 	}},
 	{ "Charging", {
-		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
-					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
-					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) },
-					{ TEXT("r.ScreenPercentage"), FHLConfigValue(100) },
+//		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
+//					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
+//					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) },
+//					{ TEXT("r.ScreenPercentage"), FHLConfigValue(100) },
 	}},
 	{ "Docked",	{
-		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
-					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
-					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) },
-					{ TEXT("r.ScreenPercentage"), FHLConfigValue(100) },
+//		            { TEXT("r.ReflectionMethod"), FHLConfigValue(2) },
+//					{ TEXT("r.DynamicGlobalIlluminationMethod"), FHLConfigValue(2) },
+//					{ TEXT("r.Shadow.Virtual.Enable"), FHLConfigValue(1) },
+//					{ TEXT("r.ScreenPercentage"), FHLConfigValue(100) },
 	}}
 };
 
 UHarmonyLinkGraphics::UHarmonyLinkGraphics()
 {
 	UE_LOG(LogHarmonyLink, Warning, TEXT("HarmonyLinkGraphics initialized."));
+	if (_INSTANCE != this)
+	{
+		if (_INSTANCE)
+		{
+			DestroySettings();
+		}
+
+		_INSTANCE = this;
+	}
+
+	AddToRoot();
 	
 	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UHarmonyLinkGraphics::OnPostWorldInitialization);
 	FWorldDelegates::OnPreWorldFinishDestroy.AddUObject(this, &UHarmonyLinkGraphics::OnWorldEnd);
+
+	Init();
 }
 
 UHarmonyLinkGraphics::~UHarmonyLinkGraphics()
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("~UHarmonyLinkGraphics called."));
 	FWorldDelegates::OnPostWorldInitialization.RemoveAll(this);
 }
 
 void UHarmonyLinkGraphics::LoadConfig(const bool bForceReload)
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("LoadConfig called."));
 	QUICK_SCOPE_CYCLE_COUNTER(HarmonyLinkGraphics_LoadSettings);
 
 	// Load the settings into the map
-	if (!LoadSettingsFromConfig(false))
-	{
-		if (!LoadSettingsFromConfig(true))
-		{
-			CreateDefaultConfigFile();
-			// Retry 2nd time
-			LoadSettingsFromConfig(true);
-		}
-	}
+	GetConfig();
 
 	DebugPrintProfiles();
 }
 
-bool UHarmonyLinkGraphics::LoadSettingsFromConfig(const bool bLoadDefaults)
+bool UHarmonyLinkGraphics::LoadSettingsFromConfig(FConfigFile* ConfigFile) const
 {
-	// Load the configuration from the INI file
-	FConfigFile ConfigFile;
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("LoadSettingsFromConfig called."));
+	//const FString Filename = "HarmonyLink"; //GetConfigDirectoryFile(bLoadDefaults);
+	
+	// Load each profile section
+	bool bLoaded = true;
 
-	const FString Filename = GetConfigDirectoryFile(bLoadDefaults);
+	// Load the _bAutomaticSwitch variable
+	const FString SectionName = TEXT("HarmonyLink");
+	const FString KeyName = TEXT("AutomaticProfileSwitch");
 
-	if (!GConfig)
+	if (!ConfigFile->GetBool(*SectionName, *KeyName, _bAutomaticSwitch))
 	{
-		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to access GConfig!"));
-		return false;
+		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load bAutomaticSwitch from config"));
+		bLoaded = false;
+	}
+	else
+	{
+		UE_LOG(LogHarmonyLink, Log, TEXT("Loaded bAutomaticSwitch: %s"), _bAutomaticSwitch ? TEXT("true") : TEXT("false"));
 	}
 
-	if (GConfig->LoadLocalIniFile(ConfigFile, *Filename, false, nullptr, false))
+	for (const TPair<EProfile, FName>& Profile : _ProfileNames)
 	{
-		// Load each profile section
-		bool bLoaded = true;
-
-		// Load the _bAutomaticSwitch variable
-		const FString SectionName = TEXT("HarmonyLink");
-		const FString KeyName = TEXT("AutomaticProfileSwitch");
-
-		if (!GConfig->GetBool(*SectionName, *KeyName, _bAutomaticSwitch, Filename))
+		if (!LoadSection(ConfigFile, Profile))
 		{
-			UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load bAutomaticSwitch from config"));
+			UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load section: '%s'"), *Profile.Value.ToString());
 			bLoaded = false;
 		}
-		else
-		{
-			UE_LOG(LogHarmonyLink, Log, TEXT("Loaded bAutomaticSwitch: %s"), _bAutomaticSwitch ? TEXT("true") : TEXT("false"));
-		}
-
-		for (const TPair<EProfile, FName>& Profile : _ProfileNames)
-		{
-			if (!LoadSection(ConfigFile, Profile))
-			{
-				UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load section: '%s'"), *Profile.Value.ToString());
-				bLoaded = false;
-			}
-		}
-
-		// Check if all profiles and settings were loaded successfully
-		if (bLoaded)
-		{
-			UE_LOG(LogHarmonyLink, Log, TEXT("Successfully loaded config file: %s"), *Filename);
-			return true;
-		}
 	}
 
-	UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load config file: %s"), *Filename);
+	// Check if all profiles and settings were loaded successfully
+	if (bLoaded)
+	{
+		UE_LOG(LogHarmonyLink, Log, TEXT("Successfully loaded config."));
+		return true;
+	}
+
+	UE_LOG(LogHarmonyLink, Error, TEXT("Failed to load config file."));
 	return false;
 }
 
-bool UHarmonyLinkGraphics::LoadSection(const FConfigFile& ConfigFile, const TPair<EProfile, FName> Profile)
+bool UHarmonyLinkGraphics::LoadSection(FConfigFile* ConfigFile, const TPair<EProfile, FName> Profile)
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("LoadSection called."));
+	if (!ensureMsgf(ConfigFile, TEXT("ConfigFile is nullptr!"))) return false;
+	
 	const FName& SectionName = Profile.Value;
 	const EProfile ProfileKey = Profile.Key;
 
-	if (const FConfigSection* Section = ConfigFile.FindSection(*SectionName.ToString()))
+	const FConfigSection* Section = nullptr;
+
+
+#if (ENGINE_MAJOR_VERSION >= 5)
+	Section = ConfigFile->FindSection(*SectionName.ToString())
+#elif (ENGINE_MAJOR_VERSION == 4) && (ENGINE_MINOR_VERSION >= 27)
+	Section = ConfigFile->FindOrAddSection(*SectionName.ToString());
+#else
+	#error "Unsupported Unreal Engine version"
+#endif
+
+	if (Section)
 	{
 		FSettingsProfile& SettingsProfile = _Profiles.FindOrAdd(ProfileKey);
 		SettingsProfile.SectionName = SectionName;
@@ -180,11 +203,13 @@ bool UHarmonyLinkGraphics::LoadSection(const FConfigFile& ConfigFile, const TPai
 
 void UHarmonyLinkGraphics::SaveConfig() const
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("SaveConfig called."));
 	Intermal_SaveConfig(false);
 }
 
 void UHarmonyLinkGraphics::SetSetting(const EProfile Profile, const FName Setting, const FHLConfigValue Value)
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("SetSetting called."));
 	// Ignore if HarmonyLinkSettings is disabled
 	if (Profile == EProfile::NONE)
 	{
@@ -214,7 +239,7 @@ void UHarmonyLinkGraphics::SetSetting(const EProfile Profile, const FName Settin
 		TypeString = TEXT("float");
 		break;
 	case EConfigValueType::Bool:
-		ValueString = Value.GetValue<bool>() ? TEXT("true") : TEXT("false");
+		ValueString = Value.GetValue<bool>() ? TEXT("True") : TEXT("False");
 		TypeString = TEXT("bool");
 		break;
 	case EConfigValueType::String:
@@ -240,6 +265,7 @@ void UHarmonyLinkGraphics::SetSetting(const EProfile Profile, const FName Settin
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 {
+	UE_LOG(LogHarmonyLink, VeryVerbose, TEXT("GetSettings called."));
 	// Check if we already initialised
 	if (_INSTANCE)
 	{
@@ -248,14 +274,13 @@ UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 
 	// Proceed to create a new singleton instance
 	_INSTANCE = NewObject<UHarmonyLinkGraphics>();
-	_INSTANCE->AddToRoot();
-	_INSTANCE->Init();
 	
 	return _INSTANCE;
 }
 
 FSettingsProfile UHarmonyLinkGraphics::GetSettingProfile(const EProfile Profile)
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("GetSettingProfile called."));
 	// Ignore if HarmonyLinkSettings is disabled
 	if (Profile == EProfile::NONE)
 	{
@@ -285,35 +310,48 @@ FSettingsProfile UHarmonyLinkGraphics::GetSettingProfile(const EProfile Profile)
 
 EProfile UHarmonyLinkGraphics::GetActiveProfile() const
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("GetActiveProfile called."));
 	return _ActiveProfile;
 }
 
 void UHarmonyLinkGraphics::SetAutomaticSwitching(const bool bAutomaticSwitch)
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("SetAutomaticSwitching called."));
 	_bAutomaticSwitch = bAutomaticSwitch;
 	OnAutomaticSwitchChanged.Broadcast(_bAutomaticSwitch);
 }
 
 bool UHarmonyLinkGraphics::GetAutomaticSwitching() const
 {
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("GetAutomaticSwitching called."));
 	return _bAutomaticSwitch;
 }
 
 void UHarmonyLinkGraphics::DestroySettings()
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("DestroySettings called."));
 	if (_INSTANCE)
 	{
 		UE_LOG(LogHarmonyLink, Log, TEXT("Destroying UHarmonyLinkGraphics."))
 		FWorldDelegates::OnPostWorldInitialization.RemoveAll(_INSTANCE);
 		FWorldDelegates::OnPreWorldFinishDestroy.RemoveAll(_INSTANCE);
 		_INSTANCE->RemoveFromRoot();
-		_INSTANCE->MarkAsGarbage();
+		
+#if (ENGINE_MAJOR_VERSION >= 5)
+		 _INSTANCE->MarkAsGarbage(); // For UE 5.0 and above
+#elif (ENGINE_MAJOR_VERSION == 4) && (ENGINE_MINOR_VERSION >= 27)
+		_INSTANCE->MarkPendingKill(); // For UE 4.27 and above
+#else
+#error "Unsupported Unreal Engine version"
+#endif
+		
 		_INSTANCE = nullptr;
 	}
 }
 
 void UHarmonyLinkGraphics::Init()
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("Init called."));
 	LoadConfig();
 
 	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
@@ -326,8 +364,9 @@ void UHarmonyLinkGraphics::Init()
 
 void UHarmonyLinkGraphics::Intermal_SaveConfig(const bool bDefaultConfig) const
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("Intermal_SaveConfig called."));
 	QUICK_SCOPE_CYCLE_COUNTER(HarmonyLinkGraphics_SaveConfig);
-
+	
 	const FString Filename = GetConfigDirectoryFile(bDefaultConfig);
 	const FString SectionName = TEXT("HarmonyLink");
 	const FString KeyName = TEXT("AutomaticProfileSwitch");
@@ -343,57 +382,52 @@ void UHarmonyLinkGraphics::Intermal_SaveConfig(const bool bDefaultConfig) const
 	}
 	
 	UE_LOG(LogHarmonyLink, Log, TEXT("Flushing file: '%s'"), *Filename);
+	GetConfig()->Dirty = true;
+	// You'd think that Write would actually write something but for some
+	// reason even if it outputs a success the file doesn't actually get created.
+	// For this reason, Flush seems to work for now.
+	//GetConfig()->Write(Filename);
 	GConfig->Flush(true, Filename);
 }
 
 void UHarmonyLinkGraphics::Tick()
 {
-	Async(EAsyncExecution::Thread, [this]()
+	UE_LOG(LogHarmonyLink, VeryVerbose, TEXT("Tick called."));
+	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
+
+	if (BatteryStatus.BatteryPercent != _LastBatteryPercentage)
 	{
-		const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
+		// Ensure thread-safe broadcasting
+		OnBatteryLevelChanged.Broadcast(BatteryStatus.BatteryPercent);
+	}
 
-		if (BatteryStatus.BatteryPercent != _LastBatteryPercentage)
-		{
-			// Ensure thread-safe broadcasting
-			Async(EAsyncExecution::TaskGraphMainThread, [this, BatteryStatus]()
-			{
-				OnBatteryLevelChanged.Broadcast(BatteryStatus.BatteryPercent);
-			});
-		}
+	if (!_bAutomaticSwitch)
+	{
+		return;
+	}
 
-		if (!_bAutomaticSwitch)
+	if (BatteryStatus.HasBattery)
+	{
+		if (BatteryStatus.IsACConnected)
 		{
-			return;
-		}
-
-		if (BatteryStatus.HasBattery)
-		{
-			if (BatteryStatus.IsACConnected)
+			if (_ActiveProfile != EProfile::CHARGING)
 			{
-				if (_ActiveProfile != EProfile::CHARGING)
-				{
-					Async(EAsyncExecution::TaskGraphMainThread, [this]()
-					{
-						ApplyProfileInternal(EProfile::CHARGING);
-					});
-				}
-			}
-			else
-			{
-				if (_ActiveProfile != EProfile::BATTERY)
-				{
-					Async(EAsyncExecution::TaskGraphMainThread, [this]()
-					{
-						ApplyProfileInternal(EProfile::BATTERY);
-					});
-				}
+				ApplyProfileInternal(EProfile::CHARGING);
 			}
 		}
-	});
+		else
+		{
+			if (_ActiveProfile != EProfile::BATTERY)
+			{
+				ApplyProfileInternal(EProfile::BATTERY);
+			}
+		}
+	}
 }
 
-void UHarmonyLinkGraphics::CreateDefaultConfigFile()
+void UHarmonyLinkGraphics::CreateDefaultConfigFile() const
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("CreateDefaultConfigFile called."));
 	UE_LOG(LogHarmonyLink, Log, TEXT("Creating default config file."));
 
 	LoadDefaults();
@@ -404,13 +438,17 @@ void UHarmonyLinkGraphics::CreateDefaultConfigFile()
 
 FString UHarmonyLinkGraphics::GetConfigDirectoryFile(const bool bDefaultFolder)
 {
-	FString ConfigFileName = bDefaultFolder? "DefaultHarmonyLink.ini" : "HarmonyLink.ini"; // Replace with your actual config file name
+	UE_LOG(LogHarmonyLink, Log, TEXT("GetConfigDirectoryFile called."));
+	FString ConfigFileName = bDefaultFolder ? TEXT("DefaultHarmonyLink.ini") : TEXT("HarmonyLink.ini");
 
-	return FPaths::Combine(bDefaultFolder ? FPaths::ProjectConfigDir() : FPaths::GeneratedConfigDir(), ConfigFileName);
+	FString ConfigDirectory = bDefaultFolder ? FPaths::ProjectConfigDir() : FPaths::Combine(FPaths::GeneratedConfigDir(), UGameplayStatics::GetPlatformName());
+
+	return FPaths::Combine(ConfigDirectory, ConfigFileName);
 }
 
-void UHarmonyLinkGraphics::SaveSection(const FSettingsProfile& SettingsProfile, const bool bDefaultConfig, const bool bFlush)
+void UHarmonyLinkGraphics::SaveSection(const FSettingsProfile& SettingsProfile, const bool bDefaultConfig, const bool bFlush) const
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("SaveSection called."));
 	if (GConfig)
 	{
 		const FString Filename = GetConfigDirectoryFile(bDefaultConfig);
@@ -430,7 +468,7 @@ void UHarmonyLinkGraphics::SaveSection(const FSettingsProfile& SettingsProfile, 
 				TypeString = TEXT("float");
 				break;
 			case EConfigValueType::Bool:
-				ValueString = Setting.Value.GetValue<bool>() ? TEXT("true") : TEXT("false");
+				ValueString = Setting.Value.GetValue<bool>() ? TEXT("True") : TEXT("False");
 				TypeString = TEXT("bool");
 				break;
 			case EConfigValueType::String:
@@ -452,9 +490,9 @@ void UHarmonyLinkGraphics::SaveSection(const FSettingsProfile& SettingsProfile, 
 	}
 }
 
-void UHarmonyLinkGraphics::LoadDefaults()
+void UHarmonyLinkGraphics::LoadDefaults() const
 {
-	UE_LOG(LogHarmonyLink, Log, TEXT("LoadDefaults started."));
+	UE_LOG(LogHarmonyLink, Log, TEXT("LoadDefaults called."));
 
 	_Profiles.Reset();
 
@@ -475,6 +513,7 @@ void UHarmonyLinkGraphics::LoadDefaults()
 
 bool UHarmonyLinkGraphics::ApplyProfileInternal(const EProfile Profile)
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("ApplyProfileInternal called."));
 	// If the profile is None, revert to the original user game settings
 	if (Profile == EProfile::NONE)
 	{
@@ -536,6 +575,7 @@ bool UHarmonyLinkGraphics::ApplyProfileInternal(const EProfile Profile)
 
 void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::InitializationValues IVS)
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("OnPostWorldInitialization called."));
 	if (!World || !World->IsValidLowLevel())
 	{
 		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to Hook into World Initialisation!"))
@@ -544,7 +584,7 @@ void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::Init
 	
 	if (World->IsGameWorld())
 	{
-		if (_INSTANCE)
+		if (IsValid(_INSTANCE))
 		{
 			FTimerManager* TimerManager = &World->GetTimerManager();
 			if (!TimerManager)
@@ -553,11 +593,12 @@ void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::Init
 				return;
 			}
 			
-			if (!TimerManager->TimerExists(_INSTANCE->_TickTimerHandle) || !TimerManager->IsTimerActive(_INSTANCE->_TickTimerHandle))
+			if (!TimerManager->TimerExists(_TickTimerHandle) || !TimerManager->IsTimerActive(_TickTimerHandle))
 			{
-				World->GetTimerManager().SetTimer(_INSTANCE->_TickTimerHandle, [&, TimerManager]
+
+				World->GetTimerManager().SetTimer(_TickTimerHandle, [TimerManager]
 				{
-					if (!this)
+					if (!_INSTANCE)
 					{
 						UE_LOG(LogHarmonyLink, Error, TEXT("'This' is destroyed, Clearing timer."))
 						if (TimerManager)
@@ -566,16 +607,29 @@ void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::Init
 						}
 						return;
 					}
-					Tick();
+					_INSTANCE->Tick();
 				}, _TickRate, true);
 			}
+			else
+			{
+				UE_LOG(LogHarmonyLink, Error, TEXT("Error: Timer already exists."));
+			}
 		}
+		else
+		{
+			UE_LOG(LogHarmonyLink, Error, TEXT("'This' is nullptr!"));
+		}
+	}
+	else
+	{
+		//UE_LOG(LogHarmonyLink, Error, TEXT("Failed to bring up tick!"));
 	}
 }
 
 void UHarmonyLinkGraphics::OnWorldEnd(UWorld* World)
 {
-	if (!World || !World->IsValidLowLevel())
+	UE_LOG(LogHarmonyLink, Log, TEXT("OnWorldEnd(UWorld* World) called."));
+	if (!World)
 	{
 		UE_LOG(LogHarmonyLink, Error, TEXT("World Already destroyed"))
 		return;
@@ -592,6 +646,7 @@ void UHarmonyLinkGraphics::OnWorldEnd(UWorld* World)
 
 bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile, const bool bDisableAutomaticSwitch)
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("Applying Profile."));
 	// Manual profile change, turn off automatic switching
 	if (bDisableAutomaticSwitch)
 	{
@@ -603,6 +658,7 @@ bool UHarmonyLinkGraphics::ApplyProfile(const EProfile Profile, const bool bDisa
 
 void UHarmonyLinkGraphics::ApplySetting(const TPair<FName, FHLConfigValue>& Setting)
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("Applying settings."));
 	// Apply the setting based on the key (CVar)
 	IConsoleManager& ConsoleManager = IConsoleManager::Get();
 	IConsoleVariable* CVar = ConsoleManager.FindConsoleVariable(*Setting.Key.ToString());
@@ -646,6 +702,45 @@ void UHarmonyLinkGraphics::DebugPrintProfiles() const
 	UE_LOG(LogHarmonyLink, Log, TEXT("DebugPrintProfiles completed."));
 }
 
+FConfigFile* UHarmonyLinkGraphics::GetConfig() const
+{
+	UE_LOG(LogHarmonyLink, Verbose, TEXT("GetConfig Called."));
+	if (_ConfigFile)
+	{
+		return _ConfigFile.Get();
+	}
+
+	FConfigFile* ConfigFile = GConfig->Find(GetConfigDirectoryFile(false), false);
+	
+	if (!ConfigFile)
+	{
+		UE_LOG(LogHarmonyLink, Warning, TEXT("Config file not found, attempting to read DefaultHarmonyLink.ini."));
+		// Look in ProjectFolder->Config->DefaultHarmonyLink.ini
+		ConfigFile = GConfig->Find(GetConfigDirectoryFile(true), true);
+	}
+
+	/*if (!ConfigFile)
+	{
+		CreateDefaultConfigFile();
+		ConfigFile = GConfig->Find(GetConfigDirectoryFile(true), true);
+	}*/
+
+	if (ConfigFile)
+	{
+		UE_LOG(LogHarmonyLink, Verbose, TEXT("Setting up config."));
+		ConfigFile->Name = "HarmonyLink";
+		LoadSettingsFromConfig(ConfigFile);
+		_ConfigFile = MakeShareable(ConfigFile);
+	}
+	else
+	{
+		UE_LOG(LogHarmonyLink, Error, TEXT("Failed to make config variable!"))
+		return nullptr;
+	}
+	
+	return _ConfigFile.Get();
+}
+
 void UHarmonyLinkGraphics::PrintDebugSection(FSettingsProfile& SettingsProfile)
 {
 	UE_LOG(LogHarmonyLink, Warning, TEXT("[%s]"), *SettingsProfile.SectionName.ToString());
@@ -681,6 +776,7 @@ void UHarmonyLinkGraphics::PrintDebugSection(FSettingsProfile& SettingsProfile)
 
 void UHarmonyLinkGraphics::ResetInstance()
 {
+	UE_LOG(LogHarmonyLink, Log, TEXT("Resetting instance."));
 	_INSTANCE->DestroySettings();
 	GetSettings();
 }

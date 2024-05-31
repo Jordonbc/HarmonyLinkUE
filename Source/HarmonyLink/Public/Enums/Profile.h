@@ -11,7 +11,7 @@
 UENUM(BlueprintType)
 enum class EProfile : uint8
 {
-	NONE UMETA(DisplayName = "NONE"),
+	NONE = 0 UMETA(DisplayName = "NONE"),
 	BATTERY UMETA(DisplayName = "BATTERY"),
 	CHARGING UMETA(DisplayName = "CHARGING"),
 	DOCKED UMETA(DisplayName = "DOCKED"),

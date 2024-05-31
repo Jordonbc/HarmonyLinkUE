@@ -120,7 +120,7 @@ public:
 	 * - Calls the `Init` function on the new instance to perform any necessary initialization.
 	 * - Returns the singleton instance.
 	 */
-	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink Settings")
 	static UHarmonyLinkGraphics* GetSettings();
 
 	/**
@@ -141,7 +141,7 @@ public:
 	 * 
 	 * @note Uses UE_LOG for logging errors.
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink Settings")
+	UFUNCTION(BlueprintCallable, BlueprintPure, BlueprintPure, Category="HarmonyLink Settings")
 	FSettingsProfile GetSettingProfile(const EProfile Profile);
 
 	/**
@@ -245,7 +245,7 @@ private:
 	 * 
 	 * @note Uses UE_LOG for logging the creation process.
 	 */
-	void CreateDefaultConfigFile();
+	void CreateDefaultConfigFile() const;
 
 	/**
 	 * @brief Retrieves the path to the configuration file.
@@ -278,7 +278,7 @@ private:
 	 * 
 	 * @note Uses UE_LOG for logging errors and success messages.
 	 */
-	bool LoadSettingsFromConfig(const bool bLoadDefaults);
+	bool LoadSettingsFromConfig(FConfigFile* ConfigFile) const;
 
 	/**
 	 * @brief Loads a specific section from the configuration file into a settings profile.
@@ -298,7 +298,7 @@ private:
 	 * 
 	 * @note The function handles settings of types int, float, bool, and string.
 	 */
-	bool LoadSection(const FConfigFile& ConfigFile, const TPair<EProfile, FName> Profile);
+	static bool LoadSection(FConfigFile* ConfigFile, const TPair<EProfile, FName> Profile);
 	
 	
 	/**
@@ -322,7 +322,7 @@ private:
 	 * 
 	 * @note Uses UE_LOG for logging the save and flush operations.
 	 */
-	static void SaveSection(const FSettingsProfile& SettingsProfile, const bool bDefaultConfig, const bool bFlush = false);
+	void SaveSection(const FSettingsProfile& SettingsProfile, const bool bDefaultConfig, const bool bFlush = false) const;
 
 	/**
 	 * @brief Loads the default settings into the profiles.
@@ -340,7 +340,7 @@ private:
 	 * 
 	 * @note Uses UE_LOG for logging the start of the default settings loading process.
 	 */
-	void LoadDefaults();
+	void LoadDefaults() const;
 
 	/**
 	 * @brief Applies the specified graphics profile internally.
@@ -451,6 +451,8 @@ private:
 	 */
 	void DebugPrintProfiles() const;
 
+	FConfigFile* GetConfig() const;
+
 	/**
 	 * @brief Prints debug information for a specific settings profile.
 	 * 
@@ -468,10 +470,10 @@ private:
 	static void PrintDebugSection(FSettingsProfile& SettingsProfile);
 
 	// Indicates whether automatic profile switching is enabled.
-	bool _bAutomaticSwitch = false;
+	static bool _bAutomaticSwitch;
 
 	// Stores the last recorded battery percentage.
-	int32 _LastBatteryPercentage = 0;
+	static int32 _LastBatteryPercentage;
 
 	// The rate at which to query HarmonyLinkLib for hardware info.
 	static int32 _TickRate;
@@ -480,17 +482,15 @@ private:
 	static FTimerHandle _TickTimerHandle;
 
 	// The currently active profile.
-	EProfile _ActiveProfile = EProfile::NONE;
+	static EProfile _ActiveProfile;
 
 	// Maps profile enums to their corresponding names.
-	TMap<EProfile, FName> _ProfileNames = {
-		{EProfile::BATTERY, "Battery"},
-		{EProfile::CHARGING, "Charging"},
-		{EProfile::DOCKED, "Docked"},
-	};
+	static TMap<EProfile, FName> _ProfileNames;
 
 	// Stores the settings profiles.
-	TMap<EProfile, FSettingsProfile> _Profiles;
+	static TMap<EProfile, FSettingsProfile> _Profiles;
+
+	static TSharedPtr<FConfigFile> _ConfigFile;
 
 	// The default settings for profiles.
 	static TMap<FName, TMap<FName, FHLConfigValue>> _DefaultSettings;

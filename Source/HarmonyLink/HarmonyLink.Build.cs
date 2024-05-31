@@ -9,7 +9,7 @@ public class HarmonyLink : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		IWYUSupport = IWYUSupport.Full;
+		//IWYUSupport = IWYUSupport.Full;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -31,6 +31,8 @@ public class HarmonyLink : ModuleRules
 				"Core",
 				"CoreUObject",
                 "Engine",
+                
+                "HarmonyLinkLib",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -40,7 +42,6 @@ public class HarmonyLink : ModuleRules
 			new string[]
 			{
 				// ... add private dependencies that you statically link with here ...
-				"HarmonyLinkLib",
 			}
 			);
 

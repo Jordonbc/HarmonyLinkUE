@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "Enums/DeviceEnum.h"
 #include "Enums/Platform.h"
-#include <Structs/FDevice.h>
+
+#include "Structs/FDevice.h"
 
 #include "Device.generated.h"
 
@@ -25,7 +26,7 @@ struct FDevice
 
 	// The type of the device.
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="HarmonyLink")
-	EDeviceEnum Device = EDeviceEnum::DESKTOP;
+	EDevice Device = EDevice::DESKTOP;
 
 	// Constructor that initializes the struct with information from an external source.
 	// @param oldDevice Pointer to an external FDevice structure to copy data from.
@@ -35,7 +36,7 @@ private:
 	// Converts an external device enum to the internal EDeviceEnum type.
 	// @param Device External device enum to convert.
 	// @returns Converted EDeviceEnum value.
-	static EDeviceEnum Convert(HarmonyLinkLib::EDevice Device);
+	static EDevice Convert(HarmonyLinkLib::EDevice Device);
 	
 	// Converts an external platform enum to the internal EPlatform type.
 	// @param Platform External platform enum to convert.

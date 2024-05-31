@@ -1,8 +1,20 @@
 ﻿// Copyright (C) 2024 Jordon Brooks
 
 #include "HarmonyLinkLibrary.h"
+#include "HarmonyLink.h"
 
 #include "HarmonyLinkLib.h"
+
+UHarmonyLinkLibrary::UHarmonyLinkLibrary()
+{
+	if (!HarmonyLinkLib::HL_Init())
+	{
+		UE_LOG(LogHarmonyLink, Fatal, TEXT("Failed to initialise HarmonyLinkLib!"));
+		return;
+	}
+
+	UE_LOG(LogHarmonyLink, Log, TEXT("HarmonyLinkLib Initialised!"));
+}
 
 bool UHarmonyLinkLibrary::IsWine()
 {
@@ -16,7 +28,7 @@ bool UHarmonyLinkLibrary::IsLinux()
 
 bool UHarmonyLinkLibrary::IsSteamDeck()
 {
-	return GetDeviceInfo().Device == EDeviceEnum::STEAM_DECK;
+	return GetDeviceInfo().Device == EDevice::STEAM_DECK;
 }
 
 FCPUInfo UHarmonyLinkLibrary::GetCPUInfo()

@@ -2,7 +2,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include <HarmonyLinkLib.h>
+
+#include "Structs/FOSVerInfo.h"
 
 #include "OSVerInfo.generated.h"
 

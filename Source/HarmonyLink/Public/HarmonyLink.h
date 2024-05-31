@@ -4,7 +4,7 @@
 
 #include "Modules/ModuleManager.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogHarmonyLink, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogHarmonyLink, All, All);
 
 class FHarmonyLinkModule : public IModuleInterface
 {

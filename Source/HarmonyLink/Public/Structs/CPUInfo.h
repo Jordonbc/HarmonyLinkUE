@@ -2,9 +2,10 @@
 
 #pragma once
 
-#include <HarmonyLinkLib.h>
-
 #include "CoreMinimal.h"
+
+#include "Structs/FCPUInfo.h"
+
 #include "CPUInfo.generated.h"
 
 /*

@@ -9,7 +9,7 @@
  * Enum representing different operating system platforms.
  */
 UENUM(BlueprintType)
-enum class EDeviceEnum : uint8
+enum class EDevice : uint8
 {
     DESKTOP UMETA(DisplayName = "Desktop"),
     LAPTOP UMETA(DisplayName = "Laptop"),

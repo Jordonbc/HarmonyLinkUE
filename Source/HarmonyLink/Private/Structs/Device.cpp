@@ -19,20 +19,20 @@ FDevice::FDevice(HarmonyLinkLib::FDevice* oldDevice)
 	}
 }
 
-EDeviceEnum FDevice::Convert(HarmonyLinkLib::EDevice Device)
+EDevice FDevice::Convert(HarmonyLinkLib::EDevice Device)
 {
 	switch (Device)
 	{
 	case HarmonyLinkLib::EDevice::DESKTOP:
-		return EDeviceEnum::DESKTOP;
+		return EDevice::DESKTOP;
 	case HarmonyLinkLib::EDevice::LAPTOP:
-		return EDeviceEnum::LAPTOP;
+		return EDevice::LAPTOP;
 	case HarmonyLinkLib::EDevice::HANDHELD:
-		return EDeviceEnum::HANDHELD;
+		return EDevice::HANDHELD;
 	case HarmonyLinkLib::EDevice::STEAM_DECK:
-		return EDeviceEnum::STEAM_DECK;
+		return EDevice::STEAM_DECK;
 	default:
-		return EDeviceEnum::DESKTOP;
+		return EDevice::DESKTOP;
 	}
 }
 

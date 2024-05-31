@@ -1,9 +1,10 @@
 ﻿// Copyright (C) 2024 Jordon Brooks
 #pragma once
 
-#include <HarmonyLinkLib.h>
-
 #include "CoreMinimal.h"
+
+#include "Structs/FBattery.h"
+
 #include "Battery.generated.h"
 
 /*
