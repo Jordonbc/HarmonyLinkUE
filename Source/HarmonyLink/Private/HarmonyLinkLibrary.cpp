@@ -5,6 +5,21 @@
 
 #include "HarmonyLinkLib.h"
 
+bool UHarmonyLinkLibrary::bIsWineCached = false;
+bool UHarmonyLinkLibrary::bIsLinuxCached = false;
+bool UHarmonyLinkLibrary::bIsSteamDeckCached = false;
+bool UHarmonyLinkLibrary::bCPUInfoCached = false;
+bool UHarmonyLinkLibrary::bDeviceInfoCached = false;
+bool UHarmonyLinkLibrary::bOSInfoCached = false;
+
+bool UHarmonyLinkLibrary::bIsWine = false;
+bool UHarmonyLinkLibrary::bIsLinux = false;
+bool UHarmonyLinkLibrary::bIsSteamDeck = false;
+
+FCPUInfo UHarmonyLinkLibrary::CachedCPUInfo = FCPUInfo();
+FDevice UHarmonyLinkLibrary::CachedDeviceInfo = FDevice();
+FOSVerInfo UHarmonyLinkLibrary::CachedOSInfo = FOSVerInfo();
+
 UHarmonyLinkLibrary::UHarmonyLinkLibrary()
 {
 	if (!HarmonyLinkLib::HL_Init())
@@ -16,34 +31,65 @@ UHarmonyLinkLibrary::UHarmonyLinkLibrary()
 	UE_LOG(LogHarmonyLink, Log, TEXT("HarmonyLinkLib Initialised!"));
 }
 
-bool UHarmonyLinkLibrary::IsWine()
+bool UHarmonyLinkLibrary::IsWine(bool bForce)
 {
-	return HarmonyLinkLib::get_is_wine();
+	if (!bIsWineCached || bForce)
+	{
+		bIsWine = HarmonyLinkLib::get_is_wine();
+		bIsWineCached = true;
+	}
+	return bIsWine;
 }
 
-bool UHarmonyLinkLibrary::IsLinux()
+bool UHarmonyLinkLibrary::IsLinux(bool bForce)
 {
-	return HarmonyLinkLib::get_is_linux();
+	if (!bIsLinuxCached || bForce)
+	{
+		bIsLinux = HarmonyLinkLib::get_is_linux();
+		bIsLinuxCached = true;
+	}
+	return bIsLinux;
 }
 
-bool UHarmonyLinkLibrary::IsSteamDeck()
+bool UHarmonyLinkLibrary::IsSteamDeck(bool bForce)
 {
-	return GetDeviceInfo().Device == EDevice::STEAM_DECK;
+	if (!bIsSteamDeckCached || bForce)
+	{
+		bIsSteamDeck = GetDeviceInfo().Device == EDevice::STEAM_DECK;
+		bIsSteamDeckCached = true;
+	}
+	return bIsSteamDeck;
 }
 
-FCPUInfo UHarmonyLinkLibrary::GetCPUInfo()
+FCPUInfo UHarmonyLinkLibrary::GetCPUInfo(bool bForce)
 {
-	return FCPUInfo(HarmonyLinkLib::get_cpu_info());
+	if (!bCPUInfoCached || bForce)
+	{
+		CachedCPUInfo = FCPUInfo(HarmonyLinkLib::get_cpu_info());
+		bCPUInfoCached = true;
+	}
+
+	return CachedCPUInfo;
 }
 
-FDevice UHarmonyLinkLibrary::GetDeviceInfo()
+FDevice UHarmonyLinkLibrary::GetDeviceInfo(bool bForce)
 {
-	return FDevice(HarmonyLinkLib::get_device_info());
+	if (!bDeviceInfoCached || bForce)
+	{
+		CachedDeviceInfo = FDevice(HarmonyLinkLib::get_device_info());
+		bDeviceInfoCached = true;
+	}
+	return CachedDeviceInfo;
 }
 
-FOSVerInfo UHarmonyLinkLibrary::GetOSInfo()
+FOSVerInfo UHarmonyLinkLibrary::GetOSInfo(bool bForce)
 {
-	return FOSVerInfo(HarmonyLinkLib::get_os_version());
+	if (!bOSInfoCached || bForce)
+	{
+		CachedOSInfo = FOSVerInfo(HarmonyLinkLib::get_os_version());
+		bOSInfoCached = true;
+	}
+	return CachedOSInfo;
 }
 
 FBattery UHarmonyLinkLibrary::GetBatteryStatus()

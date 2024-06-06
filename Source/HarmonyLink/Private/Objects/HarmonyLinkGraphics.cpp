@@ -7,6 +7,7 @@
 #include "HarmonyLinkLibrary.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "HarmonyLinkLib.h"
 
 UHarmonyLinkGraphics* UHarmonyLinkGraphics::_INSTANCE = nullptr;
 int32 UHarmonyLinkGraphics::_TickRate = 1;
@@ -72,8 +73,8 @@ UHarmonyLinkGraphics::UHarmonyLinkGraphics()
 
 	AddToRoot();
 	
-	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UHarmonyLinkGraphics::OnPostWorldInitialization);
-	FWorldDelegates::OnPreWorldFinishDestroy.AddUObject(this, &UHarmonyLinkGraphics::OnWorldEnd);
+	FWorldDelegates::OnPostWorldInitialization.AddStatic(&UHarmonyLinkGraphics::OnPostWorldInitialization);
+	FWorldDelegates::OnPreWorldFinishDestroy.AddStatic(&UHarmonyLinkGraphics::OnWorldEnd);
 
 	Init();
 }
@@ -82,6 +83,7 @@ UHarmonyLinkGraphics::~UHarmonyLinkGraphics()
 {
 	UE_LOG(LogHarmonyLink, Verbose, TEXT("~UHarmonyLinkGraphics called."));
 	FWorldDelegates::OnPostWorldInitialization.RemoveAll(this);
+	FWorldDelegates::OnPreWorldFinishDestroy.RemoveAll(this);
 }
 
 void UHarmonyLinkGraphics::LoadConfig(const bool bForceReload)
@@ -352,13 +354,27 @@ void UHarmonyLinkGraphics::DestroySettings()
 void UHarmonyLinkGraphics::Init()
 {
 	UE_LOG(LogHarmonyLink, Log, TEXT("Init called."));
+
+	if (!HarmonyLinkLib::HL_Init())
+	{
+		UE_LOG(LogHarmonyLink, Fatal, TEXT("Failed to initialise HarmonyLinkLib!"));
+		return;
+	}
+
 	LoadConfig();
 
 	const FBattery BatteryStatus = UHarmonyLinkLibrary::GetBatteryStatus();
-	
+
 	if (BatteryStatus.HasBattery)
 	{
-		ApplyProfileInternal(EProfile::BATTERY);
+		if (BatteryStatus.IsACConnected)
+		{
+			ApplyProfileInternal(EProfile::BATTERY);
+		}
+		else
+		{
+			ApplyProfileInternal(EProfile::CHARGING);
+		}
 	}
 }
 
@@ -584,7 +600,7 @@ void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::Init
 	
 	if (World->IsGameWorld())
 	{
-		if (IsValid(_INSTANCE))
+		if (IsValid(GetSettings()))
 		{
 			FTimerManager* TimerManager = &World->GetTimerManager();
 			if (!TimerManager)
@@ -598,7 +614,7 @@ void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::Init
 
 				World->GetTimerManager().SetTimer(_TickTimerHandle, [TimerManager]
 				{
-					if (!_INSTANCE)
+					if (!GetSettings())
 					{
 						UE_LOG(LogHarmonyLink, Error, TEXT("'This' is destroyed, Clearing timer."))
 						if (TimerManager)
@@ -607,7 +623,7 @@ void UHarmonyLinkGraphics::OnPostWorldInitialization(UWorld* World, UWorld::Init
 						}
 						return;
 					}
-					_INSTANCE->Tick();
+					GetSettings()->Tick();
 				}, _TickRate, true);
 			}
 			else

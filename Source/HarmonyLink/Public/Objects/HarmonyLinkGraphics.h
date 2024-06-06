@@ -6,7 +6,7 @@
 #include "Enums/Profile.h"
 #include "Structs/SettingsProfile.h"
 
-#include "UObject/Object.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "HarmonyLinkGraphics.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProfileChanged, EProfile, Profile);
@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBatteryLevelChanged, int32, Batte
  * 
  */
 UCLASS(Blueprintable, config="HarmonyLink")
-class HARMONYLINK_API UHarmonyLinkGraphics : public UObject
+class HARMONYLINK_API UHarmonyLinkGraphics : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -390,7 +390,7 @@ private:
 	 * 
 	 * @note Uses UE_LOG for logging errors and informational messages.
 	 */
-	void OnPostWorldInitialization(UWorld* World, UWorld::InitializationValues IVS);
+	static void OnPostWorldInitialization(UWorld* World, UWorld::InitializationValues IVS);
 
 	/**
 	 * @brief Handles actions to be performed when the world ends.
@@ -406,7 +406,7 @@ private:
 	 * 
 	 * @note Uses UE_LOG for logging errors and informational messages.
 	 */
-	void OnWorldEnd(UWorld* World);
+	static void OnWorldEnd(UWorld* World);
 
 	/**
 	 * @brief Resets the singleton instance of the UHarmonyLinkGraphics settings.

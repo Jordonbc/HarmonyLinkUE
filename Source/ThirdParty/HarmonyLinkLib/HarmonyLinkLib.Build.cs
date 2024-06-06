@@ -43,26 +43,30 @@ public class HarmonyLinkLib : ModuleRules
 		}
 		else if (Target.Platform == UnrealTargetPlatform.Linux)
 		{
-			PublicDefinitions.Add("HARMONYLINKLIB_SHARED=1");
+			PublicDefinitions.Add("HARMONYLINKLIB_STATIC=1");
 			//Console.WriteLine("Building Linux");
 			PublicDefinitions.Add("BUILD_LINUX=1");
-			string libPath = Path.Combine(ModuleDirectory, "bin", platformString, "libHarmonyLinkLibShared.so");
-			//Console.WriteLine("Library Path: " + libPath);
-			PublicAdditionalLibraries.Add(libPath);
-			
-			// Add the C++ standard library explicitly
-			//string toolchainLibPath = "E:/UnrealToolChains/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/lib";
-			//PublicSystemLibraryPaths.Add(toolchainLibPath);
-			RuntimeDependencies.Add(libPath);
-		}
-		// I shall include this if anyone wishes to provide Mac binaries of HarmonyLink but these are not included by default as I don't own one.
-		else if (Target.Platform == UnrealTargetPlatform.Mac)
-		{
-			PublicDefinitions.Add("HARMONYLINKLIB_SHARED=1");
-			PublicDefinitions.Add("BUILD_MACOS=1");
-			string dynlibPath = Path.Combine(ModuleDirectory, "lib", platformString, "libHarmonyLinkLibStatic.a");
-			//Console.WriteLine("Dynamic Library Path: " + dynlibPath);
-			RuntimeDependencies.Add(dynlibPath);
-		}
+			string dllPath = Path.Combine(ModuleDirectory, "lib", platformString, "libHarmonyLinkLibStatic_clang++.a");
+            //string dllTargetPath = "$(TargetOutputDir)/libHarmonyLinkLibShared.so";
+            //Console.WriteLine("Library Path: " + libPath);
+            PublicAdditionalLibraries.Add(dllPath);
+
+			// Ensure the proper linking of standard C++ libraries
+            //PublicSystemLibraries.Add("stdc++");
+            //PublicSystemLibraries.Add("c++abi");
+            //PublicSystemLibraries.Add("m"); // Math library
+            //PublicSystemLibraries.Add("pthread"); // POSIX threads library
+
+            // Add the C++ standard library explicitly if needed
+            PublicSystemLibraries.Add("c++");
+
+            // Ensure linking with libc and other necessary libraries
+            //PublicSystemLibraries.Add("dl"); // Dynamic linking loader
+            //PublicSystemLibraries.Add("rt"); // Real-time library
+
+            // Add any other libraries that might be needed
+            //PublicSystemLibraries.Add("gcc_s"); // GCC support library
+            //PublicSystemLibraries.Add("gcc"); // GCC compiler support library
+        }
 	}
 }

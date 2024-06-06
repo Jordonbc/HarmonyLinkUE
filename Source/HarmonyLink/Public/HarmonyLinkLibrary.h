@@ -25,29 +25,45 @@ public:
 
 	// Checks if the game is running under Wine.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
-	static bool IsWine();
+	static bool IsWine(bool bForce = false);
 
 	// Checks if the operating system is Linux.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
-	static bool IsLinux();
+	static bool IsLinux(bool bForce = false);
 
 	// Checks if the game is running on a Steam Deck.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
-	static bool IsSteamDeck();
+	static bool IsSteamDeck(bool bForce = false);
 
 	// Retrieves information about the CPU of the current device.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
-	static FCPUInfo GetCPUInfo();
+	static FCPUInfo GetCPUInfo(bool bForce = false);
 
 	// Retrieves information about the current device.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
-	static FDevice GetDeviceInfo();
+	static FDevice GetDeviceInfo(bool bForce = false);
 
 	// Retrieves information about the operating system of the current device.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
-	static FOSVerInfo GetOSInfo();
+	static FOSVerInfo GetOSInfo(bool bForce = false);
 
 	// Retrieves the current battery status of the device.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
 	static FBattery GetBatteryStatus();
+
+private:
+	static bool bIsWineCached;
+	static bool bIsWine;
+	static bool bIsLinuxCached;
+	static bool bIsLinux;
+	static bool bIsSteamDeckCached;
+	static bool bIsSteamDeck;
+
+	static bool bCPUInfoCached;
+	static bool bDeviceInfoCached;
+	static bool bOSInfoCached;
+
+	static FCPUInfo CachedCPUInfo;
+	static FDevice CachedDeviceInfo;
+	static FOSVerInfo CachedOSInfo;
 };
