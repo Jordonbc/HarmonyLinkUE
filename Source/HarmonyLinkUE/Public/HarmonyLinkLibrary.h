@@ -16,12 +16,16 @@
  * Library of static functions for accessing various system information, particularly for the HarmonyLink project.
  */
 UCLASS()
-class HARMONYLINK_API UHarmonyLinkLibrary : public UBlueprintFunctionLibrary
+class HARMONYLINKUE_API UHarmonyLinkLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
 	UHarmonyLinkLibrary();
+
+	// IsInitialised
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
+	static bool IsInitialised();
 
 	// Checks if the game is running under Wine.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="HarmonyLink")
@@ -66,4 +70,6 @@ private:
 	static FCPUInfo CachedCPUInfo;
 	static FDevice CachedDeviceInfo;
 	static FOSVerInfo CachedOSInfo;
+
+	static bool bIsInitialised;
 };

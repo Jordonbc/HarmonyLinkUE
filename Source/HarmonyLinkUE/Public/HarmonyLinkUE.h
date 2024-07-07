@@ -6,7 +6,7 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogHarmonyLink, All, All);
 
-class FHarmonyLinkModule : public IModuleInterface
+class FHarmonyLinkUEModule : public IModuleInterface
 {
 public:
 

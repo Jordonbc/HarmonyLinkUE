@@ -1,7 +1,7 @@
 ﻿// Copyright (C) 2024 Jordon Brooks
 
 #include "HarmonyLinkLibrary.h"
-#include "HarmonyLink.h"
+#include "HarmonyLinkUE.h"
 
 #include "HarmonyLinkLib.h"
 
@@ -20,15 +20,24 @@ FCPUInfo UHarmonyLinkLibrary::CachedCPUInfo = FCPUInfo();
 FDevice UHarmonyLinkLibrary::CachedDeviceInfo = FDevice();
 FOSVerInfo UHarmonyLinkLibrary::CachedOSInfo = FOSVerInfo();
 
+bool UHarmonyLinkLibrary::bIsInitialised = false;
+
 UHarmonyLinkLibrary::UHarmonyLinkLibrary()
 {
-	if (!HarmonyLinkLib::HL_Init())
+	bIsInitialised = HarmonyLinkLib::HL_Init();
+	
+	if (!bIsInitialised)
 	{
 		UE_LOG(LogHarmonyLink, Fatal, TEXT("Failed to initialise HarmonyLinkLib!"));
 		return;
 	}
 
 	UE_LOG(LogHarmonyLink, Log, TEXT("HarmonyLinkLib Initialised!"));
+}
+
+bool UHarmonyLinkLibrary::IsInitialised()
+{
+	return bIsInitialised;
 }
 
 bool UHarmonyLinkLibrary::IsWine(bool bForce)

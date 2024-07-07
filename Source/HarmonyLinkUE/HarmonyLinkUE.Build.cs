@@ -3,9 +3,9 @@
 using UnrealBuildTool;
 using System.IO;
 
-public class HarmonyLink : ModuleRules
+public class HarmonyLinkUE : ModuleRules
 {
-	public HarmonyLink(ReadOnlyTargetRules Target) : base(Target)
+	public HarmonyLinkUE(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 

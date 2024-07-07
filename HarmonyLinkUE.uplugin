@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "HarmonyLink",
+	"FriendlyName": "HarmonyLinkUE",
 	"Description": "Revolutionize handheld gaming with adaptive game settings. Optimize graphics and gameplay experience based on real-time system metrics. Open-source project empowering developers to enhance games on portable devices",
 	"Category": "Handheld",
 	"CreatedBy": "Jordon Brooks",
@@ -16,10 +16,18 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "HarmonyLink",
+			"Name": "HarmonyLinkUE",
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault",
-			"WhitelistPlatforms": ["Win64", "Linux"]
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux"
+			]
+		},
+		{
+			"Name": "HarmonyLinkSettings",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	]
 }

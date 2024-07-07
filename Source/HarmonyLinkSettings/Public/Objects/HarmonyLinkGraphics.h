@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBatteryLevelChanged, int32, Batte
  * 
  */
 UCLASS(Blueprintable, config="HarmonyLink")
-class HARMONYLINK_API UHarmonyLinkGraphics : public UBlueprintFunctionLibrary
+class HARMONYLINKSETTINGS_API UHarmonyLinkGraphics : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -84,7 +84,7 @@ public:
 	 * @note Uses UE_LOG for logging the update process and any errors.
 	 */
 	UFUNCTION(BlueprintCallable, Category="HarmonyLink Settings")
-	void SetSetting(EProfile Profile, FName Setting, FHLConfigValue Value);
+	void SetSetting(EProfile Profile, FName Setting, const FHLConfigValue& Value);
 
 	/**
 	 * @brief Applies the specified graphics profile.
