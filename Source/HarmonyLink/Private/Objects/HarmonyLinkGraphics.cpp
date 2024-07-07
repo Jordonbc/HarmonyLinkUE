@@ -58,27 +58,6 @@ TMap<FName, TMap<FName, FHLConfigValue>> UHarmonyLinkGraphics::_DefaultSettings 
 	}}
 };
 
-UHarmonyLinkGraphics::UHarmonyLinkGraphics()
-{
-	UE_LOG(LogHarmonyLink, Warning, TEXT("HarmonyLinkGraphics initialized."));
-	if (_INSTANCE != this)
-	{
-		if (_INSTANCE)
-		{
-			DestroySettings();
-		}
-
-		_INSTANCE = this;
-	}
-
-	AddToRoot();
-	
-	FWorldDelegates::OnPostWorldInitialization.AddStatic(&UHarmonyLinkGraphics::OnPostWorldInitialization);
-	FWorldDelegates::OnPreWorldFinishDestroy.AddStatic(&UHarmonyLinkGraphics::OnWorldEnd);
-
-	Init();
-}
-
 UHarmonyLinkGraphics::~UHarmonyLinkGraphics()
 {
 	UE_LOG(LogHarmonyLink, Verbose, TEXT("~UHarmonyLinkGraphics called."));
@@ -276,6 +255,7 @@ UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 
 	// Proceed to create a new singleton instance
 	_INSTANCE = NewObject<UHarmonyLinkGraphics>();
+	_INSTANCE->Init();
 	
 	return _INSTANCE;
 }
@@ -353,6 +333,22 @@ void UHarmonyLinkGraphics::DestroySettings()
 
 void UHarmonyLinkGraphics::Init()
 {
+	UE_LOG(LogHarmonyLink, Warning, TEXT("HarmonyLinkGraphics initialized."));
+	if (_INSTANCE != this)
+	{
+		if (_INSTANCE)
+		{
+			DestroySettings();
+		}
+
+		_INSTANCE = this;
+	}
+
+	AddToRoot();
+	
+	FWorldDelegates::OnPostWorldInitialization.AddStatic(&UHarmonyLinkGraphics::OnPostWorldInitialization);
+	FWorldDelegates::OnPreWorldFinishDestroy.AddStatic(&UHarmonyLinkGraphics::OnWorldEnd);
+	
 	UE_LOG(LogHarmonyLink, Log, TEXT("Init called."));
 
 	if (!HarmonyLinkLib::HL_Init())
@@ -648,6 +644,11 @@ void UHarmonyLinkGraphics::OnWorldEnd(UWorld* World)
 	if (!World)
 	{
 		UE_LOG(LogHarmonyLink, Error, TEXT("World Already destroyed"))
+		return;
+	}
+
+	if (!World->IsGameWorld())
+	{
 		return;
 	}
 	

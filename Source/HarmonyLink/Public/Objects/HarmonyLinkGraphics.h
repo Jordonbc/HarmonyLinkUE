@@ -22,7 +22,6 @@ class HARMONYLINK_API UHarmonyLinkGraphics : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	UHarmonyLinkGraphics();
 	virtual ~UHarmonyLinkGraphics() override;
 
 	UPROPERTY(BlueprintAssignable)
