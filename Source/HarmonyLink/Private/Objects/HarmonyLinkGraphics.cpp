@@ -71,7 +71,7 @@ void UHarmonyLinkGraphics::LoadConfig(const bool bForceReload)
 	QUICK_SCOPE_CYCLE_COUNTER(HarmonyLinkGraphics_LoadSettings);
 
 	// Load the settings into the map
-	GetConfig();
+	FConfigFile* _ = GetConfig();
 
 	DebugPrintProfiles();
 }
