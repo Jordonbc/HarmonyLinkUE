@@ -18,8 +18,6 @@ public class HarmonyLinkSettings : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
-                "Slate",
-                "SlateCore",
                 
                 "HarmonyLinkUE"
             }
