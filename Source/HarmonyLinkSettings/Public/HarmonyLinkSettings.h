@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Copyright (C) 2024 Jordon Brooks
+
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
