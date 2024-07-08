@@ -13,27 +13,27 @@
 *.hh    text diff=cpp
 
 # Compiled Object files
-*.slo   binary
-*.lo    binary
-*.o     binary
-*.obj   binary
+*.slo   binary filter=lfs diff=lfs merge=lfs
+*.lo    binary filter=lfs diff=lfs merge=lfs
+*.o     binary filter=lfs diff=lfs merge=lfs
+*.obj   binary filter=lfs diff=lfs merge=lfs
 
 # Precompiled Headers
-*.gch   binary
-*.pch   binary
+*.gch   binary filter=lfs diff=lfs merge=lfs
+*.pch   binary filter=lfs diff=lfs merge=lfs
 
 # Compiled Dynamic libraries
-*.so    binary
-*.dylib binary
-*.dll   binary
+*.so    binary filter=lfs diff=lfs merge=lfs
+*.dylib binary filter=lfs diff=lfs merge=lfs
+*.dll   binary filter=lfs diff=lfs merge=lfs
 
 # Compiled Static libraries
-*.lai   binary
-*.la    binary
-*.a     binary
-*.lib   binary
+*.lai   binary filter=lfs diff=lfs merge=lfs
+*.la    binary filter=lfs diff=lfs merge=lfs
+*.a     binary filter=lfs diff=lfs merge=lfs
+*.lib   binary filter=lfs diff=lfs merge=lfs
 
 # Executables
-*.exe   binary
-*.out   binary
-*.app   binary
+*.exe   binary filter=lfs diff=lfs merge=lfs
+*.out   binary filter=lfs diff=lfs merge=lfs
+*.app   binary filter=lfs diff=lfs merge=lfs

@@ -1,0 +1,33 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.1.0",
+	"FriendlyName": "HarmonyLinkUE",
+	"Description": "Revolutionize handheld gaming with adaptive game settings. Optimize graphics and gameplay experience based on real-time system metrics. Open-source project empowering developers to enhance games on portable devices",
+	"Category": "Handheld",
+	"CreatedBy": "Jordon Brooks",
+	"CreatedByURL": "https://bbgames.dev",
+	"DocsURL": "https://github.com/Jordonbc/HarmonyLink",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/92fd511971274d1f955abb7197485041",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "HarmonyLinkUE",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Linux"
+			]
+		},
+		{
+			"Name": "HarmonyLinkSettings",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
