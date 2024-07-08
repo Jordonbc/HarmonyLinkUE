@@ -129,7 +129,7 @@ bool UHarmonyLinkGraphics::LoadSection(FConfigFile* ConfigFile, const TPair<EPro
 
 
 #if (ENGINE_MAJOR_VERSION >= 5)
-	Section = ConfigFile->FindSection(*SectionName.ToString())
+	Section = ConfigFile->FindSection(*SectionName.ToString());
 #elif (ENGINE_MAJOR_VERSION == 4) && (ENGINE_MINOR_VERSION >= 27)
 	Section = ConfigFile->FindOrAddSection(*SectionName.ToString());
 #else
