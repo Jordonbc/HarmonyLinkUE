@@ -64,6 +64,11 @@ UHarmonyLinkGraphics::~UHarmonyLinkGraphics()
 	FWorldDelegates::OnPreWorldFinishDestroy.RemoveAll(this);
 }
 
+const TMap<EProfile, FSettingsProfile>& UHarmonyLinkGraphics::GetProfiles()
+{
+	return _Profiles;
+}
+
 void UHarmonyLinkGraphics::LoadConfig(const bool bForceReload)
 {
 	UE_LOG(LogHarmonyLinkSettings, Verbose, TEXT("LoadConfig called."));
@@ -257,6 +262,53 @@ UHarmonyLinkGraphics* UHarmonyLinkGraphics::GetSettings()
 	_INSTANCE->Init();
 	
 	return _INSTANCE;
+}
+
+void UHarmonyLinkGraphics::RenameSetting(EProfile Profile, FName OldName, FName NewName)
+{
+	if (FSettingsProfile* SettingsProfile = _Profiles.Find(Profile))
+	{
+		if (SettingsProfile->Settings.Contains(OldName))
+		{
+			FHLConfigValue Value = SettingsProfile->Settings[OldName];
+			SettingsProfile->Settings.Remove(OldName);
+			SettingsProfile->Settings.Add(NewName, Value);
+			SaveConfig();
+		}
+	}
+}
+
+void UHarmonyLinkGraphics::ChangeSettingType(EProfile Profile, FName SettingName, EConfigValueType NewType)
+{
+    if (FSettingsProfile* SettingsProfile = _Profiles.Find(Profile))
+    {
+        if (SettingsProfile->Settings.Contains(SettingName))
+        {
+            FHLConfigValue OldValue = SettingsProfile->Settings[SettingName];
+            SettingsProfile->Settings.Remove(SettingName);
+
+            FHLConfigValue NewValue;
+            switch (NewType)
+            {
+            case EConfigValueType::Int:
+                NewValue = FHLConfigValue(0); // Default to conversion from float
+                break;
+            case EConfigValueType::Float:
+                NewValue = FHLConfigValue(0.f); // Default to conversion from int
+                break;
+            case EConfigValueType::Bool:
+                NewValue = FHLConfigValue(false); // Default to conversion from int
+                break;
+            case EConfigValueType::String:
+                NewValue = FHLConfigValue(FString()); // Default to string
+                break;
+            default:
+                return;
+            }
+            SettingsProfile->Settings.Add(SettingName, NewValue);
+            SaveConfig();
+        }
+    }
 }
 
 FSettingsProfile UHarmonyLinkGraphics::GetSettingProfile(const EProfile Profile)

@@ -8,6 +8,7 @@
 UENUM(BlueprintType)
 enum class EConfigValueType : uint8
 {
+	None,
 	Int,
 	Float,
 	Bool,
@@ -42,11 +43,13 @@ private:
 public:
 	FHLConfigValue() : Type(EConfigValueType::String), IntValue(0), FloatValue(0.0f), BoolValue(false), StringValue(TEXT("")) {}
 
-	FHLConfigValue(int32 Value) : Type(EConfigValueType::Int), IntValue(Value), FloatValue(0.0f), BoolValue(false), StringValue(TEXT("")) {}
+	FHLConfigValue(const EConfigValueType Type) : Type(Type), IntValue(0), FloatValue(0.0f), BoolValue(false), StringValue(TEXT("")) {}
 
-	FHLConfigValue(float Value) : Type(EConfigValueType::Float), IntValue(0), FloatValue(Value), BoolValue(false), StringValue(TEXT("")) {}
+	FHLConfigValue(const int32 Value) : Type(EConfigValueType::Int), IntValue(Value), FloatValue(0.0f), BoolValue(false), StringValue(TEXT("")) {}
 
-	FHLConfigValue(bool Value) : Type(EConfigValueType::Bool), IntValue(0), FloatValue(0.0f), BoolValue(Value), StringValue(TEXT("")) {}
+	FHLConfigValue(const float Value) : Type(EConfigValueType::Float), IntValue(0), FloatValue(Value), BoolValue(false), StringValue(TEXT("")) {}
+
+	FHLConfigValue(const bool Value) : Type(EConfigValueType::Bool), IntValue(0), FloatValue(0.0f), BoolValue(Value), StringValue(TEXT("")) {}
 
 	FHLConfigValue(const FString& Value) : Type(EConfigValueType::String), IntValue(0), FloatValue(0.0f), BoolValue(false), StringValue(Value) {}
 	

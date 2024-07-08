@@ -195,6 +195,11 @@ public:
 	 */
 	static void DestroySettings();
 
+protected:
+	static const TMap<EProfile, FSettingsProfile>& GetProfiles();
+	void RenameSetting(EProfile Profile, FName OldName, FName NewName);
+	void ChangeSettingType(EProfile Profile, FName SettingName, EConfigValueType NewType);
+
 private:
 	/**
 	 * @brief Initializes the UHarmonyLinkGraphics settings.
