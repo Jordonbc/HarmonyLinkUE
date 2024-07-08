@@ -1,4 +1,6 @@
-﻿#include "HarmonyLinkSettings.h"
+﻿// Copyright (C) 2024 Jordon Brooks
+
+#include "HarmonyLinkSettings.h"
 
 #include "Objects/HarmonyLinkGraphics.h"
 

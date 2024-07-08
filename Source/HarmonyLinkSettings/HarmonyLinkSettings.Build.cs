@@ -1,4 +1,6 @@
-﻿using UnrealBuildTool;
+﻿// Copyright (C) 2024 Jordon Brooks
+
+using UnrealBuildTool;
 
 public class HarmonyLinkSettings : ModuleRules
 {
