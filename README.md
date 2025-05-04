@@ -68,4 +68,4 @@ For inquiries or issues, reach out or open an issue on GitHub.
 
 ## Acknowledgements
 
-- Full HarmonyLinkLib source code is available [here](https://github.com/Jordonbc/HarmonyLink).
+- Full HarmonyLinkLib source code is available [here](https://git.bbgames.dev/jordon/HarmonyLink).
